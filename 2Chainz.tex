@@ -107,6 +107,34 @@ One reasonable question is what happens if the switching miner decides to maximi
 
 The miner must take time into account when making this decision.  If the miner can expect a reward with value 10 from mining on Chain 1 and 5 from mining on Chain 2 it might seem like the miner should pick Chain 1.  If Chain 1's expected reward is over a difficulty adjustment period that is 3 times longer than Chain 2's period however, this clearly is the wrong decision.  For this reason we frame the greedy algorithm in terms of profit rates.
 
+Note that a Greedy strategy implies that the switching miner will never hedge its bets and put fractions of its hash power on both chains in hopes of this adding up to future gains.  Therefore for $i \neq 0$ exactly one of $\alpha_{1i}, \alpha_{2i}$ = 0 and the other equals $\alpha$
+
+To calculate the profit rate of a miner on a given chain we begin by calculating the emission rate of blocks on that chain.  We use a similar idea to the difficulty calculation above.  The number of hashes it takes to mine a block in this new interval is still equal to the inverse of the probability of finding a solution hash.  However now that probability corresponds to the difficulty of the previous epoch on this chain.  We are no longer in a steady state and the hash power on the chain is no longer reflected on the difficulty of mining on the chain.  Call $\Delta_{11}$ the time it takes to mine a block on expectation in epoch 1.  The following then holds
+\begin{align*}
+(\alpha_{11} + \beta_1)H\Delta_{11} &= \frac{2^{256}d_{10}}{F_{\text{max}}}\\
+(\alpha_{11} + \beta_1)H\Delta_{11} &= 600H(\alpha_{10} + \beta_1)\\
+\Delta_{11} &= 600 \frac{\alpha_{10} + \beta_1}{ \alpha_{11} + \beta_1}
+\end{align*}
+
+This value will hold for the next $b$ blocks (until the next difficult adjustment).  For this epoch therefore, the average rate of block emission is 
+$$
+\frac{b}{\Delta_{11} }
+$$
+And therefore the average rate of profit for Chain 1 if the miner decides to mine on Chain 1 is
+\begin{align*}
+f_1 \frac{b}{\Delta_{11} } \frac{\alpha_{11}}{ \alpha_{11} + \beta_1} = \frac{f_1 ( \alpha_{11} + \beta_1) b \alpha_{11}}{(\alpha_{10} + \beta_1)(\alpha_{11} + \beta_1)} = \frac{f_1 b \alpha}{(\alpha_{10} + \beta_1)}\\
+\end{align*}
+
+This is compared with the average rate of profit for Chain 2 which by symmetry is 
+$$
+\frac{f_2b\alpha}{\alpha_{20} + \beta_2}
+$$
+and as $\alpha$ and $b$ are the same in both expressions, the comparison criterion the miner makes is to decide on the greater value among $\frac{f_1}{\alpha_{10} + \beta_1}$ and $\frac{f_2}{\alpha_{20} + \beta_2}$, which is simply the ratio between the value of the chain's coinbase and the fraction of the hashpower on the chain in the previous epoch.
+
+
+
+%The next switching point is influenced by the miner's choice of which chain to mine on.  Call 
+
 
 
 \end{document}
