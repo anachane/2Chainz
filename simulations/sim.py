@@ -1,4 +1,5 @@
 # Simulation framework for two blockchains
+import random
 
 ## 2^256 / F_max
 max_ratio = 4.29 * 10**9
@@ -39,7 +40,6 @@ class Chain:
     # Update the state of the chain to account for the specified period of
     # blocks being mined
     def periodMined(self, blocks, time):
-        # TODO is this correct python?
         self.periods.append(Period(self.hashRate, self.diff, time, blocks))
         return
 
@@ -66,8 +66,7 @@ class Chain:
     def nextTime(self):
         prev_diff = self.periods[-1].diff
         mean = (max_ratio * prev_diff) / self.hashRate
-        # TODO draw from exponential distro with this mean
-        return 0
+        return rand.expovariate(1.0 / mean)
 
 # The greedy switching strategy decision function
 def gDecision(chain1, chain2):
@@ -96,7 +95,7 @@ def gDecision(chain1, chain2):
 class Simulation:
     def __init__(self, numAdjPeriods):
         self.numAdjPerods = numAdjPeriods
-        # TODO initialize randomness
+        random.seed()
         return
     
     def runGreedy(self):
