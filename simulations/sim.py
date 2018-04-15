@@ -96,15 +96,25 @@ class Simulation:
     def __init__(self, numAdjPeriods):
         self.numAdjPerods = numAdjPeriods
         random.seed()
+        self.stepSize = 0.01
+
         return
     
     def runGreedy(self):
-        # TODO sweep in alpha
-
-        # TODO sweep in betaFrac
-
-        # TODO sweep in priceFrac
-        return
+        results = []
+        for alpha in [0.01, 0.05, 0.1, 0.3]:
+            beta1 = 0
+            while beta1 < 1 - alpha:
+                beta1 = beta1 + self.stepSize
+                beta2 = 1 - alpha - beta1
+                priceFrac = 0 # f2/f1
+                f2 = 1 # setting this for simulation simplicity
+                while priceFrac < 1:
+                    priceFrac = priceFrac + self.stepSize
+                    f1 = f2 / priceFrac
+                    ch1, ch2 = self.runOne(beta1, beta2, alpha, f1, f2, gDecision)
+                    results.append((ch1, ch2))
+        return results
 
     # runOne executes mining on two chains for a number of difficulty 
     # adjustment periods, returning the two Chains and associated data for
@@ -145,3 +155,9 @@ class Simulation:
             chain2.updateHash(alpha2 + beta2)
 
         return chain1, chain2
+
+
+# Run from cli
+if __name__ == "__main__":
+    sim = Simulation(100)
+    sim.runGreedy()
