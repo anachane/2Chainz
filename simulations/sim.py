@@ -3,9 +3,12 @@ import random
 import math
 import csv
 import datetime
+import matplotlib.pyplot as plt
 
 ## 2^256 / F_max
 max_ratio = 4.29 * 10**9
+## arbitrarily one billion to make difficulties easier to talk about
+hPerSecond = 1000000000
 
 # A Period contains all of the information to specify a period of time on a
 # chain during which distinct rates of profit exist for the switching miner.
@@ -18,7 +21,7 @@ class Period:
     def __init__(self, hashRate, diff, time, blocks):
         self.hashRate = hashRate
         self.diff = diff
-        self.time = time
+        self.timeSinceAdj = time
         self.blocks = blocks
         return
 
@@ -36,12 +39,13 @@ class Chain:
         self.tokenValue = tokenValue
 
         # current state of chain
-        self.time = 0.0
+        self.timeSinceAdj = 0.0
+        self.timeThisPeriod = 0.0
         self.lastPuzzleTime = 0.0
         self.blocks = 0
         self.hashRate = hashRate
         self.targetTime = targetTime
-        self.diff = targetTime * 1.0 * (1 / max_ratio) * hashRate # init assuming steady state
+        self.diff = targetTime * hPerSecond * (1 / max_ratio) * hashRate # init assuming steady state
 
         # history of chain
         self.diffPeriods = 0
@@ -51,14 +55,14 @@ class Chain:
     # Update the state of the chain to account for the specified period of
     # blocks being mined
     def periodMined(self):
-        self.periods.append(Period(self.hashRate, self.diff, self.time, self.blocks))
+        self.periods.append(Period(self.hashRate, self.diff, self.timeThisPeriod, self.blocks))
         self.lastPuzzleTime = 0.0
         return
 
     # Update the current difficulty of the chain
     def updateDifficulty(self):
         self.diffPeriods += 1
-        self.diff = (self.diff * self.targetTime * self.blockNum) / self.time
+        self.diff = (self.diff * self.targetTime * self.blockNum) / self.timeSinceAdj
         return
 
     # Update the state of the chain to account for a new allocation of hash
@@ -72,10 +76,11 @@ class Chain:
         prev_diff = self.periods[-1].diff
         # max_ratio * prev_diff == mean # of hashes until block is mined
         # mean time == mean # hashes / hash rate
-        mean = (max_ratio * prev_diff) / (1.0 * self.hashRate)
+        mean = (max_ratio * prev_diff) / (hPerSecond * self.hashRate)
         self.lastPuzzleTime = random.expovariate(1.0 / mean)
         self.blocks += 1
-        self.time += self.lastPuzzleTime
+        self.timeThisPeriod += self.lastPuzzleTime
+        self.timeSinceAdj += self.lastPuzzleTime
 
 ### Decision functions define a switching miner's strategy.  These functions
 ### take in the state of both chains at any difficulty adjustment in the system
@@ -123,6 +128,10 @@ def meanReduce(results):
         total += data
     return total / float(len(results))
 
+# max takes the max of data
+def maxReduce(results):
+    return max(results)
+
 # A Simulation carries the information required to run a simulation with a
 # given configuration.  This includes:
 #     1. Parameter bounds
@@ -134,7 +143,7 @@ class Simulation:
         self.numAdjPeriods = numAdjPeriods
         random.seed()
         self.stepSize = 0.01
-        self.runsPerStep = 5
+        self.runsPerStep = 1
 
         return
 
@@ -145,13 +154,13 @@ class Simulation:
         for alpha in [0.01, 0.05, 0.1, 0.3]:
             beta1Map = {}
             alphaMap[alpha] = beta1Map
-            beta1 = 0
+            beta1 = 0.1
             while beta1 < 1 - alpha:
                 beta1 = beta1 + self.stepSize
                 print(beta1)
                 priceMap = {}
                 beta1Map[beta1] = priceMap
-                beta2 = 1 - alpha - beta1
+                beta2 = (1 - alpha) - beta1
                 priceFrac = 0 # f2/f1
                 f2 = 1 # setting this for simulation simplicity
                 while priceFrac < 1:
@@ -171,39 +180,48 @@ class Simulation:
     def runOne(self, beta1, beta2, alpha, f1, f2, decisionFun):
         # We constrain the problem a bit to simplify things:
         #  alpha always starts out on chain 1
-        chain1 = Chain(beta1, alpha, 600, 2016, beta1 + alpha, f1)
-        chain2 = Chain(beta2, alpha, 600, 2016, beta2, f2)
+        chain1 = Chain(alpha, beta1, 600, 2016, beta1 + alpha, f1)
+        chain2 = Chain(alpha, beta2, 600, 2016, beta2, f2)
         # Each loop run adds a period to each chain
         # Difficulty adjustments and periods are not 1-1 so i is not updated
         #  in every loop
+        
         while chain1.diffPeriods < self.numAdjPeriods and chain2.diffPeriods < self.numAdjPeriods:
             # Mine until one difficulty must be adjusted
+            
             while chain1.blocks < chain1.blockNum and chain2.blocks < chain2.blockNum:
-                maxTime = max(chain1.time, chain2.time)
-                if chain1.time < maxTime:
+                maxTime = max(chain1.timeThisPeriod, chain2.timeThisPeriod)
+                if chain1.timeThisPeriod < maxTime:
                     chain1.mineBlock()
                 else:
                     chain2.mineBlock()
-
-            self.finishMiningPeriod(chain1, chain2)
-            self.finishMiningPeriod(chain2, chain1)
-            maxTime = max(chain1.time, chain2.time)
-            
+            if chain1.blocks == chain1.blockNum:
+                self.finishMiningPeriod(chain1, chain2)
+            else:
+                self.finishMiningPeriod(chain2, chain1)
+                
             # Update the periods
             chain1.periodMined()
             chain2.periodMined()
             
-            # Difficulty of chain 1 adjusts
-            if chain1.time == maxTime:
+            # Difficulty of chain 1 adjusts and reset adj values
+            if chain1.blocks == chain1.blockNum:
                 chain1.updateDifficulty()
-                
+                chain1.blocks = 0
+                chain1.timeSinceAdj = 0.0
+
             # Difficulty of chain 2 adjusts
-            if chain2.time == maxTime:
+            if chain2.blocks == chain2.blockNum:
                 chain2.updateDifficulty()
+                chain2.blocks = 0
+                chain2.timeSinceAdj = 0.0
+
+            chain1.timeThisPeriod = 0.0
+            chain2.timeThisPeriod = 0.0
 
             # Switching miner makes her decision
             alpha1, alpha2 = decisionFun(chain1, chain2)
-
+            
             chain1.updateHashRate(alpha1 + beta1)
             chain2.updateHashRate(alpha2 + beta2)
 
@@ -214,17 +232,22 @@ class Simulation:
     # mined last. Furthermore the non-difficulty-adjusting chain may acutally
     # finish first.  A block mined beyond the period boundary is erased
     def finishMiningPeriod(self, chainA, chainB):
-        if chainA.blocks == chainA.blockNum:
-            while chainB.time < chainA.time and chainB.blocks < chainB.blockNum:
-                chainB.mineBlock()
-            if chainB.time > chainA.time:
-                chainB.blocks -= 1
-                chainB.time -= chainB.lastPuzzleTime
-            if chainB.time < chainA.time and chainB.blocks == chainB.blockNum:
-                chainA.blocks -= 1
-                chainA.time -= chainA.lastPuzzleTime
-
-
+        chainBMines = False
+        while chainB.timeThisPeriod < chainA.timeThisPeriod and chainB.blocks < chainB.blockNum:
+            chainBMines = True            
+            chainB.mineBlock()
+        if chainBMines and chainB.timeThisPeriod > chainA.timeThisPeriod:
+            chainB.blocks -= 1
+            chainB.timeThisPeriod -= chainB.lastPuzzleTime
+            chainB.timeSinceAdj -= chainB.lastPuzzleTime
+        if chainB.timeThisPeriod < chainA.timeThisPeriod and chainB.blocks == chainB.blockNum:
+            if not chainBMines: # chainB could not have won the race originally if chainA won the race originally
+                print("Should not get here")
+                assert(false)
+            chainA.blocks -= 1
+            chainA.timeThisPeriod -= chainA.lastPuzzleTime
+            chainA.timeSinceAdj -= chainA.lastPuzzleTime
+                
 
 ### Output functions save and visualize data from a simulation run
 
@@ -247,12 +270,19 @@ def saveResults(resultMap):
 # plotResults plots the simulation measurements in a matplotlib graph.
 # Plots are formatted to display beta vs priceFrac graphs for each alpha value
 # using the hexbin matplotlibe utility to tile the surface
-def plotResults(resultMap):
+# def plotResults(resultMap):
+#     for alpha in resultMap:
+#         betaMap = resultMap[alpha]
+#         for beta1 in betaMap:
+#             priceMap = betaMap[beta1]
+#             for priceFrac in priceMap:
+#                  = priceMap[priceFrac]
+                
     return
 
 # Run from cli
 if __name__ == "__main__":
     sim = Simulation(100)
-    resultMap = sim.runGreedy(countOscMap, meanReduce)
+    resultMap = sim.runGreedy(countOscMap, maxReduce)
     saveResults(resultMap)
-    plotResults(resultMap)
+#    plotResults(resultMap)
