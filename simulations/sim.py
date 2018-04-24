@@ -4,6 +4,7 @@ import math
 import csv
 import datetime
 import matplotlib.pyplot as plt
+import numpy as np
 
 ## 2^256 / F_max
 max_ratio = 4.29 * 10**9
@@ -143,7 +144,7 @@ class Simulation:
         self.numAdjPeriods = numAdjPeriods
         random.seed()
         self.stepSize = 0.01
-        self.runsPerStep = 1
+        self.runsPerStep = 5
 
         return
 
@@ -154,17 +155,18 @@ class Simulation:
         for alpha in [0.01, 0.05, 0.1, 0.3]:
             beta1Map = {}
             alphaMap[alpha] = beta1Map
-            beta1 = 0.1
+            beta1 = 0
             while beta1 < 1 - alpha:
                 beta1 = beta1 + self.stepSize
-                print(beta1)
+                print("beta1: " +str(beta1))
                 priceMap = {}
                 beta1Map[beta1] = priceMap
                 beta2 = (1 - alpha) - beta1
                 priceFrac = 0 # f2/f1
                 f2 = 1 # setting this for simulation simplicity
-                while priceFrac < 1:
+                while int(priceFrac) < 1:
                     priceFrac = priceFrac + self.stepSize
+                    print("priceFrac: " + str(priceFrac))
                     results = []
                     f1 = f2 / priceFrac
                     for i in range(self.runsPerStep):
@@ -247,16 +249,40 @@ class Simulation:
             chainA.blocks -= 1
             chainA.timeThisPeriod -= chainA.lastPuzzleTime
             chainA.timeSinceAdj -= chainA.lastPuzzleTime
-                
 
 ### Output functions save and visualize data from a simulation run
+    # plotResults plots the simulation measurements in a matplotlib graph.
+    # Plots are formatted to display beta vs priceFrac graphs for each alpha value
+    # using the hexbin matplotlibe utility to tile the surface
+    def plotResults(self, resultMap):
+        for alpha in resultMap:
+            # set up matplotlib graph
+            ncols = int((1-alpha)/self.stepSize)
+            nrows = int(1.1/self.stepSize)
+            vals = np.zeros((nrows,ncols))
+            betaMap = resultMap[alpha]
+            for ib,beta1 in enumerate(sorted(betaMap)):
+                if ib > ncols -1:
+                    print("ib: " + str(ib) + "beta1: " + str(beta1))
+                    break
+                priceMap = betaMap[beta1]
+                for ip,priceFrac in enumerate(sorted(priceMap)):
+                    if ip > nrows -1:
+                        print("ip: " + str(ip) + "priceFrac: " + str(priceFrac))
+                        break
+                    val = priceMap[priceFrac]
+                    vals[ip][ib] = val
+            plt.pcolor(vals)
+            plt.show()
+            plt.savefig("alpha="+str(alpha)+".png")
 
+                     
 # saveResults saves the simulation measurements to a csv file in the form
 # alpha, beta1, priceFrac, dataValue
 def saveResults(resultMap):
     now = datetime.datetime.now()
     fileName = str(now)[:16]
-    with open(fileName, 'wb') as csvfile:
+    with open(fileName, 'w') as csvfile:
         outputWriter = csv.writer(csvfile, delimiter=',')
         for alpha in resultMap:
             betaMap = resultMap[alpha]
@@ -267,22 +293,12 @@ def saveResults(resultMap):
                     outputWriter.writerow([str(alpha), str(beta1),
                                            str(priceFrac), str(dataValue)])
 
-# plotResults plots the simulation measurements in a matplotlib graph.
-# Plots are formatted to display beta vs priceFrac graphs for each alpha value
-# using the hexbin matplotlibe utility to tile the surface
-# def plotResults(resultMap):
-#     for alpha in resultMap:
-#         betaMap = resultMap[alpha]
-#         for beta1 in betaMap:
-#             priceMap = betaMap[beta1]
-#             for priceFrac in priceMap:
-#                  = priceMap[priceFrac]
-                
-    return
+# loadResults loads a csv file to a python results dictionary                    
+
 
 # Run from cli
 if __name__ == "__main__":
     sim = Simulation(100)
-    resultMap = sim.runGreedy(countOscMap, maxReduce)
+    resultMap = sim.runGreedy(countOscMap, meanReduce)
     saveResults(resultMap)
-#    plotResults(resultMap)
+    sim.plotResults(resultMap)
