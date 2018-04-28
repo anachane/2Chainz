@@ -148,7 +148,7 @@ class Simulation:
                 beta1Map[beta1] = priceMap
                 beta2 = (1 - alpha) - beta1
                 priceFrac = 0 # f2/f1
-                f2 = 1 # setting this for simulation simplicity
+                f2 = 1.0 # setting this for simulation simplicity
                 while int(priceFrac) < 1:
                     priceFrac = priceFrac + self.stepSize
                     print("priceFrac: " + str(priceFrac))
@@ -186,7 +186,7 @@ class Simulation:
                 self.finishMiningPeriod(chain1, chain2)
             else:
                 self.finishMiningPeriod(chain2, chain1)
-                
+
             # Update the periods
             chain1.periodMined()
             chain2.periodMined()
