@@ -1,10 +1,12 @@
 # Simulation framework for two blockchains
-import random
+#import random
+import numpy.random as nprand
 import math
 import csv
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
+import cProfile
 
 ## 2^256 / F_max
 max_ratio = 4.29 * 10**9
@@ -25,6 +27,10 @@ class Period:
         self.timeSinceAdj = time
         self.blocks = blocks
         return
+
+    def toList(self):
+        return [self.hashRate, round(self.diff, 1), round(self.timeSinceAdj, 1), self.blocks]
+
 
 # A Chain contains all of the information needed to specify a blockchain for
 # the simulation.  This includes:
@@ -53,6 +59,10 @@ class Chain:
         self.periods = [Period(hashRate, self.diff, targetTime, blockNum)]
         return
 
+
+    def toList(self):
+        return [p.toList() for p in self.periods]
+    
     # Update the state of the chain to account for the specified period of
     # blocks being mined
     def periodMined(self):
@@ -78,7 +88,7 @@ class Chain:
         # max_ratio * prev_diff == mean # of hashes until block is mined
         # mean time == mean # hashes / hash rate
         mean = (max_ratio * prev_diff) / (hPerSecond * self.hashRate)
-        self.lastPuzzleTime = random.expovariate(1.0 / mean)
+        self.lastPuzzleTime = nprand.exponential(mean)
         self.blocks += 1
         self.timeThisPeriod += self.lastPuzzleTime
         self.timeSinceAdj += self.lastPuzzleTime
@@ -107,32 +117,6 @@ def gDecision(chain1, chain2):
 ### some way. Reduce functions take measurements of runs over the same 
 ### parameter values and combine them in some way, i.e. mean, max, stddev
 
-### Map Funs
-# countOscData counts the number of switches occurring in the trial
-def countOscMap(ch1, ch2):
-    oscs = 0
-    lastP = None
-    for period in ch1.periods:
-        if lastP == None:
-            lastP = period
-            continue
-        if lastP.hashRate != period.hashRate:
-            oscs += 1
-        lastP = period
-    return oscs
-
-### Reduce Funs
-# mean takes the mean of data, either ints or floats.  Output float
-def meanReduce(results):
-    total = 0.0
-    for data in results:
-        total += data
-    return total / float(len(results))
-
-# max takes the max of data
-def maxReduce(results):
-    return max(results)
-
 # A Simulation carries the information required to run a simulation with a
 # given configuration.  This includes:
 #     1. Parameter bounds
@@ -142,17 +126,18 @@ def maxReduce(results):
 class Simulation:
     def __init__(self, numAdjPeriods):
         self.numAdjPeriods = numAdjPeriods
-        random.seed()
-        self.stepSize = 0.01
-        self.runsPerStep = 5
+        nprand.seed()
+        self.stepSize = 0.1
+        self.runsPerStep = 1
 
         return
 
     # runGreedy runs a simulation with the greedy-switching miner strategy and
     # a provided dataFun that processes the results of the 
-    def runGreedy(self, mapFun, reduceFun):
+    def runGreedy(self):
         alphaMap = {}
-        for alpha in [0.01, 0.05, 0.1, 0.3]:
+#        for alpha in [0.01, 0.05, 0.1, 0.3]:
+        for alpha in [0.1, 0.2]:
             beta1Map = {}
             alphaMap[alpha] = beta1Map
             beta1 = 0
@@ -171,8 +156,8 @@ class Simulation:
                     f1 = f2 / priceFrac
                     for i in range(self.runsPerStep):
                         ch1, ch2 = self.runOne(beta1, beta2, alpha, f1, f2, gDecision)
-                        results.append(mapFun(ch1, ch2))
-                    priceMap[priceFrac] = reduceFun(results)
+                        results.append([ch1.toList(), ch2.toList()])
+                    priceMap[priceFrac] = results
         return alphaMap
 
     # runOne executes mining on two chains for a number of difficulty 
@@ -250,55 +235,36 @@ class Simulation:
             chainA.timeThisPeriod -= chainA.lastPuzzleTime
             chainA.timeSinceAdj -= chainA.lastPuzzleTime
 
-### Output functions save and visualize data from a simulation run
-    # plotResults plots the simulation measurements in a matplotlib graph.
-    # Plots are formatted to display beta vs priceFrac graphs for each alpha value
-    # using the hexbin matplotlibe utility to tile the surface
-    def plotResults(self, resultMap):
-        for alpha in resultMap:
-            # set up matplotlib graph
-            ncols = int((1-alpha)/self.stepSize)
-            nrows = int(1.1/self.stepSize)
-            vals = np.zeros((nrows,ncols))
-            betaMap = resultMap[alpha]
-            for ib,beta1 in enumerate(sorted(betaMap)):
-                if ib > ncols -1:
-                    print("ib: " + str(ib) + "beta1: " + str(beta1))
-                    break
-                priceMap = betaMap[beta1]
-                for ip,priceFrac in enumerate(sorted(priceMap)):
-                    if ip > nrows -1:
-                        print("ip: " + str(ip) + "priceFrac: " + str(priceFrac))
-                        break
-                    val = priceMap[priceFrac]
-                    vals[ip][ib] = val
-            plt.pcolor(vals)
-            plt.show()
-            plt.savefig("alpha="+str(alpha)+".png")
-
-                     
 # saveResults saves the simulation measurements to a csv file in the form
 # alpha, beta1, priceFrac, dataValue
 def saveResults(resultMap):
     now = datetime.datetime.now()
     fileName = str(now)[:16]
-    with open(fileName, 'w') as csvfile:
+    with open(fileName, 'wb') as csvfile:
         outputWriter = csv.writer(csvfile, delimiter=',')
         for alpha in resultMap:
             betaMap = resultMap[alpha]
             for beta1 in betaMap:
                 priceMap = betaMap[beta1]
                 for priceFrac in priceMap:
-                    dataValue = priceMap[priceFrac]
-                    outputWriter.writerow([str(alpha), str(beta1),
-                                           str(priceFrac), str(dataValue)])
+                    results = priceMap[priceFrac]
+                    output = [str(alpha), str(beta1), str(priceFrac)]
+                    for i,trial in enumerate(results):
+                        output.append('trial'+str(i))
+                        for j,periods in enumerate(trial):
+                            output.append('chain'+str(i))
+                            for period in periods:
+                                output.append(period[0])
+                                output.append(period[1])
+                                output.append(period[2])
+                                output.append(period[3])
+                    outputWriter.writerow(output)
 
-# loadResults loads a csv file to a python results dictionary                    
-
+def main():
+    sim = Simulation(100)
+    resultMap = sim.runGreedy()
+    saveResults(resultMap)
 
 # Run from cli
 if __name__ == "__main__":
-    sim = Simulation(100)
-    resultMap = sim.runGreedy(countOscMap, meanReduce)
-    saveResults(resultMap)
-    sim.plotResults(resultMap)
+    main()
