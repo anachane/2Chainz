@@ -4,9 +4,6 @@ import numpy.random as nprand
 import math
 import csv
 import datetime
-import matplotlib.pyplot as plt
-import numpy as np
-import cProfile
 
 ## 2^256 / F_max
 max_ratio = 4.29 * 10**9
@@ -29,7 +26,7 @@ class Period:
         return
 
     def toList(self):
-        return [self.hashRate, round(self.diff, 1), round(self.timeSinceAdj, 1), self.blocks]
+        return [self.hashRate, round(self.diff, 2), round(self.timeSinceAdj, 1), self.blocks]
 
 
 # A Chain contains all of the information needed to specify a blockchain for
@@ -73,7 +70,13 @@ class Chain:
     # Update the current difficulty of the chain
     def updateDifficulty(self):
         self.diffPeriods += 1
-        self.diff = (self.diff * self.targetTime * self.blockNum) / self.timeSinceAdj
+        newDiff = (self.diff * self.targetTime * self.blockNum) / self.timeSinceAdj
+        if newDiff > self.diff * 4.0:
+            self.diff = self.diff * 4.0
+        elif newDiff < self.diff / 4.0:
+            self.diff = self.diff / 4.0
+        else:
+            self.diff = newDiff
         return
 
     # Update the state of the chain to account for a new allocation of hash
@@ -127,8 +130,8 @@ class Simulation:
     def __init__(self, numAdjPeriods):
         self.numAdjPeriods = numAdjPeriods
         nprand.seed()
-        self.stepSize = 0.1
-        self.runsPerStep = 1
+        self.stepSize = 0.01
+        self.runsPerStep = 5
 
         return
 
@@ -136,28 +139,28 @@ class Simulation:
     # a provided dataFun that processes the results of the 
     def runGreedy(self):
         alphaMap = {}
-#        for alpha in [0.01, 0.05, 0.1, 0.3]:
-        for alpha in [0.1, 0.2]:
+#        for alpha in [0.01, 0.05, 0.1, 0.2, 0.3]:
+        for alpha in [0.2, 0.3]:
             beta1Map = {}
             alphaMap[alpha] = beta1Map
-            beta1 = 0
-            while beta1 < 1 - alpha:
-                beta1 = beta1 + self.stepSize
-                print("beta1: " +str(beta1))
+            beta1 = self.stepSize
+            while abs(beta1 - (1 - alpha)) > 0.0001:
+                print("alpha: " + str(alpha) + " beta1: " +str(beta1))
                 priceMap = {}
                 beta1Map[beta1] = priceMap
                 beta2 = (1 - alpha) - beta1
                 priceFrac = 0 # f2/f1
                 f2 = 1.0 # setting this for simulation simplicity
-                while int(priceFrac) < 1:
+                while abs(priceFrac - 1) > 0.0001:
                     priceFrac = priceFrac + self.stepSize
-                    print("priceFrac: " + str(priceFrac))
                     results = []
                     f1 = f2 / priceFrac
                     for i in range(self.runsPerStep):
                         ch1, ch2 = self.runOne(beta1, beta2, alpha, f1, f2, gDecision)
                         results.append([ch1.toList(), ch2.toList()])
                     priceMap[priceFrac] = results
+                beta1 = beta1 + self.stepSize
+                
         return alphaMap
 
     # runOne executes mining on two chains for a number of difficulty 
@@ -240,7 +243,7 @@ class Simulation:
 def saveResults(resultMap):
     now = datetime.datetime.now()
     fileName = str(now)[:16]
-    with open(fileName, 'wb') as csvfile:
+    with open(fileName, 'w') as csvfile:
         outputWriter = csv.writer(csvfile, delimiter=',')
         for alpha in resultMap:
             betaMap = resultMap[alpha]
@@ -252,7 +255,7 @@ def saveResults(resultMap):
                     for i,trial in enumerate(results):
                         output.append('trial'+str(i))
                         for j,periods in enumerate(trial):
-                            output.append('chain'+str(i))
+                            output.append('chain'+str(j))
                             for period in periods:
                                 output.append(period[0])
                                 output.append(period[1])

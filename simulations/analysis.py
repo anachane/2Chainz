@@ -17,8 +17,8 @@ class Analysis:
     def plotResults(self):
         for alpha in self.resultMap:
             # set up matplotlib graph
-            ncols = int((1-alpha)/self.stepSize)
-            nrows = int(1.1/self.stepSize)
+            ncols = int((1-alpha)/self.stepSize) - 1
+            nrows = int(1.0/self.stepSize)
             vals = np.zeros((nrows,ncols))
             betaMap = self.resultMap[alpha]
             for ib,beta1 in enumerate(sorted(betaMap)):
@@ -56,7 +56,7 @@ def loadResults(fileName, mapFun, reduceFun):
             priceFrac = float(row[2])
             if row[3] != "trial0" or row[4] != "chain0":
                 print("unexpected 4th element: " + str(row[3]))
-                print("or unexpected 5th element: " + str(row[4]))                
+                print("or unexpected 5th element: " + str(row[4]))
                 return
             idx = 4
             vals = []
@@ -136,7 +136,6 @@ def countProfitMap(ch1, ch2):
     expectedProfit = 0.0
     tNorm = finishTimeMap(ch1, ch2)
     profitNorm = (tNorm / 600.0) * (ch1.alpha / ch1.beta + ch1.alpha) * ch1.tokenValue
-                       
     for period in ch1.periods:
         switchHash = float(period.hashRate) - ch1.beta
         if switchHash > 0.0:
@@ -144,9 +143,9 @@ def countProfitMap(ch1, ch2):
 
     for period in ch2.periods:
         switchHash = float(period.hashRate) - ch2.beta
-        if switchHash > 0.0:
+        if switchHash > 0.001:
             expectedProfit += ch2.tokenValue * int(period.blocks) * (switchHash / float(period.hashRate))
-    return expectedProfit / profitNorm
+    return expectedProfit - profitNorm
 
 # diffLeap returns 1 if there is a difficulty adjustment greater than 4x in
 # either direction.  If this happens a lot then that means simulations should
@@ -155,21 +154,34 @@ def countProfitMap(ch1, ch2):
 def diffLeapMap(ch1, ch2):
     lastDiff = None
     for period in ch1.periods:
+        diff = float(period.diff)        
         if lastDiff is None:
-            lastDiff = float(period.diff)
+            lastDiff = diff
             continue
-        if float(period.diff) < lastDiff / 4.0 or float(period.diff) > lastDiff * 4.0:
+
+        minDiff = lastDiff / 4.0
+        maxDiff = lastDiff * 4.0
+        if diff < minDiff and abs(diff - minDiff) > 0.1:
             return 1
-        lastDiff = float(period.diff)
+        if diff > maxDiff and abs(diff - maxDiff) > 0.1:
+            return 1
+        lastDiff = diff
+
 
     lastDiff = None
     for period in ch2.periods:
+        diff = float(period.diff)
         if lastDiff is None:
-            lastDiff = float(period.diff)
+            lastDiff = diff
             continue
-        if float(period.diff) < lastDiff / 4.0 or float(period.diff) > lastDiff * 4.0:
+        
+        minDiff = lastDiff / 4.0
+        maxDiff = lastDiff * 4.0
+        if diff < minDiff and abs(diff - minDiff) > 0.1:
             return 1
-        lastDiff = float(period.diff)
+        if diff > maxDiff and abs(diff - maxDiff) > 0.1:
+            return 1
+        lastDiff = diff
 
     return 0
 
@@ -185,7 +197,7 @@ def finishTimeMap(ch1, ch2):
     for period in ch2.periods:
         totalTime2 += float(period.timeSinceAdj)
         
-    return min(totalTime1, totalTime2)
+    return abs(totalTime1 - totalTime2)
 
 # blockDiff returns the number of blocks mined by ch2 minus the number of
 # blocks mined by ch1
@@ -206,9 +218,42 @@ def avgHashPowerCh2Map(ch1, ch2):
         avgHashRate += float(period.hashRate)
 
     avgHashRate /= len(ch2.periods)
-    normalized = avgHashRate / (ch2.alpha + ch2.beta)
+    normalized = (avgHashRate - ch2.beta) / ch2.alpha
     return normalized
+
+# oscRegion assigns a number to all 6 different orderings of fi/diff
+def oscRegionMap(ch1, ch2):
+    if ch2.beta==0:
+        return 4
+    r1a = ch1.tokenValue / (ch1.alpha + ch1.beta)
+    r1b = ch1.tokenValue / ch1.beta
+
+    r2a = ch2.tokenValue / (ch2.alpha + ch2.beta)
+    r2b = ch2.tokenValue / ch2.beta
+
+    # r2a | r1a | r1b | r2b
+    if (r1a > r2a and r1a < r2b) and r1b < r2b:
+        return 0
+
+    # r1a | r2a | r2b | r1b
+    if (r2a > r1a and r2a < r1b) and r2b < r1b:
+        return 1
+
+    # r2a | r1a | r2b | r1b
+    if (r1a > r2a and r1a < r2b) and r1b > r2b:
+        return 2
     
+    # r1a | r2a | r1b | r2b
+    if (r2a > r1a and r2a < r1b) and r2b > r1b:
+        return 3
+
+    # r1a | r1b | r2a | r2b
+    if r1b <= r2a:
+        return 4
+
+    # r2a | r2b | r1a | r1b
+    return 5
+
 
 ### Reduce Funs
 # mean takes the mean of data, either ints or floats.  Output float
@@ -231,8 +276,16 @@ def extreme01Reduce(results):
 def stdReduce(results):
     return np.std(results)
 
+def sampleNumReduce(results):
+    std = stdReduce(results)
+    mean = meanReduce(results)
+    if mean == 0:
+        return 0
+    res =  (1.6449 * std / mean )**2
+    return res
+
             
 if __name__ == "__main__":
-   data = loadResults("results/big-run-0", avgHashPowerCh2Map, meanReduce)
-   analysis = Analysis(0.01, data, "normalized-hashrate")
+   data = loadResults("results/big-run-0", finishTimeMap, maxReduce)
+   analysis = Analysis(0.01, data, "finish time diff")
    analysis.plotResults()
