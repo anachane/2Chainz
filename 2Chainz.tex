@@ -170,10 +170,35 @@ After deriving our simple greedy strategy independently, it turns out that our a
 \subsubsection{Theoretical Analysis}
 Given the mechanism of the greedy mercenary mining strategy and the properties of the protocol difficulty, one useful characterization of a two chain system is the ordering of the four values: 
 $$
-\frac{f2}{\alpha + \beta_2}, \frac{f2}{\beta_2}, \frac{f1}{\alpha + \beta_1}, \frac{f1}{\beta_1}
+\frac{f_2}{\alpha + \beta_2}, \frac{f_2}{\beta_2}, \frac{f_1}{\alpha + \beta_1}, \frac{f_1}{\beta_1}
 $$
-In a rough sense the value $\frac{fj}{\alpha + \beta_j}$ can be thought of as the least profitable expected profit rate and $\frac{fj}{\beta_j}$ the most profitable expected profit rate on chain $j$.  This is because the difficulty on chain 2 comes from a distribution with a mean proportional to the average hash rate on the previous interval and the greatest and least possible such average hash rates are $\alpha + \beta_j$ and $\beta_j$ respectively.  In the case where miners switching in the middle of one of chain $j$'s adjustment periods due to a profitability adjustment triggered by the other chain adjusting its difficulty, then the average hash rate, and therefore expected difficulty value on chain $j$ in the next period will be between these two extreme values.
+In a rough sense the value $\frac{f_j}{\alpha + \beta_j}$ can be thought of as the least profitable expected profit rate and $\frac{f_j}{\beta_j}$ the most profitable expected profit rate on chain $j$.  This is because the difficulty is distributed about a mean proportional to the average hash rate on the previous interval and the greatest and least possible such average hash rates are $\alpha + \beta_j$ and $\beta_j$ respectively.  The proportionality constants are ignored here because they are identical across each ratio and don't affect the ordering.  
 
+Due to the constraints $\frac{f_j}{\alpha + \beta_j} < \frac{f_j}{\beta_j}$, there are 6 possible orderings of these values: [TODO -- make this look less complicated by assigning visualizations to each of the four values as done in written examples.  Also putting on the number line might be nice]
+\begin{enumerate}
+\item
+$\frac{f_2}{\alpha + \beta_2} < \frac{f_2}{\beta_2} < \frac{f_1}{\alpha + \beta_1} < \frac{f_1}{\beta_1}$
+\item
+$\frac{f_1}{\alpha + \beta_1} < \frac{f_1}{\beta_1} < \frac{f_2}{\alpha + \beta_2} < \frac{f_2}{\beta_2} $
+\item
+$\frac{f_2}{\alpha + \beta_2} < \frac{f_1}{\alpha + \beta_1} < \frac{f_2}{\beta_2} < \frac{f_1}{\beta_1}$
+\item
+$\frac{f_1}{\alpha + \beta_1} < \frac{f_2}{\alpha + \beta_2} < \frac{f_1}{\beta_1} < \frac{f_2}{\beta_2}$
+\item
+$\frac{f_1}{\alpha + \beta_1} <  \frac{f_2}{\alpha + \beta_2} < \frac{f_2}{\beta_2} <  \frac{f_1}{\beta_1} $
+\item
+$ \frac{f_2}{\alpha + \beta_2} <  \frac{f_1}{\alpha + \beta_1} < \frac{f_1}{\beta_1}  < \frac{f_2}{\beta_2} $
+\end{enumerate}
+
+Any point in the parameter space defined by: $(\alpha, \beta_1, \beta_2, f_1, f_2)$ satisfies one of these orderings (or is on the boundary between them in the case of equality).  The ordering assigned to a given system should be an indicator of whether or not hash power oscillations can be expected between chains in this system.  
+
+We do not expect oscillations for systems with orderings (1) or (2).  In these cases one chain's lowest profitability rate is higher than the other chain's highest rate and and no mercenary greedy miner would ever switch to the less profitable chain.  
+
+We expect oscillations in the remaining orderings (3), (4), (5), (6).  Orderings (5) and (6) result in oscillations with a single mode.  In ordering (5) when the difficulty of chain 1 is at its lowest point then mercenaries flock to chain 1, but when the difficulty is at its maximum value they move to chain 2, and symmetrically for ordering (6).  Orderings (3) and (4) are a bit more complex.  Like ordering (5), in ordering (3) when chain 1's difficulty is at its lowest mercenaries move to chain 1.  However mercenaries do not always move to chain 2 when chain 1's difficulty is at its max value, this now depends on the difficulty of chain 2 as well.  Figure 1 plots the ordering corresponding to each point in parameter space, hypothesizing the region of instability.
+
+Note that there are a few simplifications here.  Most obviously because difficulty tracks with block discovery time which is not deterministic, the values in the orderings do not perfectly correspond to the actual values that will be compared by the mercenary miners during system execution.  In reality the difficulty adjustment alogirthm samples the ordering values in a distribution surrounding the values listed here.  This could lead to different systems in the parameter space displaying different orderings at different difficulty adjustment periods.  For example a system with ordering (2) could have middle points very close such that after a given adjustment $\frac{f_1}{\beta_1} >\frac{f_2}{\alpha + \beta_2}$, giving the system ordering (4).
+
+Furthermore in the case where miners switch in the middle of one of chain $j$'s adjustment periods due to a profitability adjustment triggered by the other chain, then the average hash rate, and therefore expected difficulty value on chain $j$, in the next period will be between the two extreme values that appear in this ordering.  Again this can change the true ordering of the chain during execution and lead to behavior not predicted by figure 1.  We simulate mining on a two chain system and describe the results in the next section to measure the true oscillation regions that emerge in light of the above two complications.
 
 \section{Simulations}
 To confirm our hypotheses with greater confidence we built a small simulation and analysis framework in under 600 lines of python.  This simulation framework generates and saves data sets recording data for each difficulty adjustment period.  Sweeps are made to record this data throughout the parameter space.  The analysis framework reads data files and applies filters across subsections of data to flexibly generate values suitable for plotting from the raw data.  These techniques provided us with clear visualizations of the profitability and instability of different regions of the parameter space.
