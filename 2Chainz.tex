@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+\documentclass[12pt, preprint]{aastex}
 \usepackage{fullpage,enumitem,amsmath,amssymb,graphicx}
 \usepackage{graphicx} % This is a package for including graphics in your solution.
 \usepackage{tikz}
@@ -29,81 +29,126 @@ Date: & March 25th 2018 \\
 
 \section*{2Chainz -- Miner Dynamics Across Blockchains}
 
-\subsection*{Introduction}
-The goal of our analysis is to study the scenario in which miners are willing to switch between two blockchains that run the same protocol to maximize their net profits.  We begin by defining a plausible parametrization of this system and then study potential chain-switching strategies that miners might employ in an attempt to increase their profits.  We begin by trying to understand the profitability over time of the naive greedy approach.  After this we plan to see whether more advanced mining strategies can increase profitability.  
-
-As these mining strategies will change the hash power distributions across the chains over time, a parallel goal is to quantify the effect any profitable strategies have on the difficulty and hash power distribution accorded to each chain over time.
-
-Time permitting this will pave the way towards a preliminary analysis of the potential impact that protocol changes in one chain could have on controlling system mining power through incentives, potentially generating sustained oscillations between chain hash power that disrupt chain availabilty or perhaps even attracting a greater share of hash power to the attacking chain.
-
-
-
-\subsection*{Model and Assumptions}
-We make many simplifying assumptions when modeling this system.  The goal is to make enough assumptions to keep analysis tractable to begin while at the same time parameterizing the problem in a way that starts off at least somewhat plausible, and paves the way for more advanced modeling.  The following are global system assumptions 
-\begin{itemize}
+\subsection{Introduction} 
+Items wrapped in * * need significant further thought
+Big goals of paper:
+\begin{enumerate}
 \item
-There are two chains in the system, chain 1 and chain 2.  Both chains use the same proof of work and difficulty adjustment algorithm as the Bitcoin protocol
+Exploring fundamentals
+\begin{enumerate}
 \item
-Each chain rewards miners with a coinbase transaction that pays out tokens to the miner that solves the block puzzle first.  We assume that the value of the coinbase reward of chain 1 is $f_1$ and the value of the token of chain 2 is $f_2$
+Define the model we used, communicate its strengths and shortcomings
+\item
+Come up with a reasonable "greedy" mercenary miner strategy. Justify why miners would want to run this strategy and how it works.
+\item
+Explore the strategies implications from first principles.  Plot expected unstable regions.  Present a diagram of the four relevant quantities and how their ordering and difficulty adjustment creates sustained oscillations of hash power between the chains
+\item
+Describe the simulation framework and methodology.  Present simulation results.  Show the empirical breakdown of the parameter space into regions.  Quantify how the smaller chain's hash power distribution changes over the space.  Quantify the profitability of the scheme as compared to staying loyal to the first chain.
+\end{enumerate}
+\item
+Extending Miner strategies
+\begin{enumerate}
+\item
+*specify a strategy and discuss whether it is optimal*
+\item
+*Compare to greedy with simulations*
+\end{enumerate}
+\item
+ Blockchain Protocol Gaming Greedy Mercenary Miners
+ \begin{enumerate}
+ \item
+Define slight updates to the model.  The protocol is trying to optimize for hashrate on the chain and reducing the number of coins minted compared to the other chain.
+\item
+Describe the update protocol and motivation for it coming from the diagrams of A.2
+\item
+*Do some analysis of the optimality of this protocol, the gained hashrate for a target minting threshold as a function of parameters*
+\item
+*Simulations that run this protocol and record the minting savings and hashrate purchase*
+\end{enumerate}
+
+\item
+D. Are miners following the mercenary strategy when they could be?
+1. plot of thresholds over time highlighting regions where the miners could have switched.  Point out and places where it looks like they do switch
+\end{enumerate}
+
+\section*{Abstract}
+We model the scenario where two blockchains have the same proof of work hash function and therefore miners can switch among chains at will.  We devise a principled simple strategy for choosing among competing blockchains that miners can follow.  We demonstrate that this strategy is profitable throughout a large region of the considered parameter space and classify different regions of the parameter space based on the behavior of miners following this profitable strategy.  We present an analysis of historical BTC / BCH data in light of our 
+
+Furthermore we investigate what an optimal switching strategy would look like if miners can make reasonable predictions about the future.  We also propose a candidate strategy for a blockchain designed to compete with an existing chain for hash power without flooding the market for its native token by minting coins at an excessive rate.
+
+\section*{Introduction}
+The recent Bitcoin Cash (BCH) fork of the Bitcoin (BTC) blockchain serves as an example of a relatively powerful fork of a blockchain network.  Such forks naturally lead to multiple blockchain networks using the same proof of work function.  In such a world "mercenary" miners can potentially increase profits by dynamically switching their hash power across chains.  Recent events have shown that this can have detrimental effects on the networks involved [1] due to drastic changes in profitability among chains and a slow response to large changes in hashrate that trace back to details in bitcoin's difficulty adjustment algorithm.
+
+The goal of our analysis is to study the scenario in which miners are willing to switch between two blockchains that run the same difficulty adjustment protocol to maximize their net profits.  We define a plausible parametrization of this system and then study potential chain-switching strategies that miners might employ in an attempt to increase their profits.  We begin by trying to understand the profitability over time of what we deemed the "greedy mercenary" approach, and the regions in which this leads to stable and unstable hash power allocations across chains.  From first principles we come up with a simple metric mercenary miners could use to decide on the best chain and end up rediscovering the so-called "Difficult Adjustment Reward Index" or DARI that miners actually use during operation. 
+
+[Ahaan discussion of further optimal algorithms or optimality of greedy mercenary]
+
+We model the system consisting of two chains both running BTC's difficulty adjustment protocol but sweeping different reward fractions, "loyal" hashrates and mercenary hashrate.  Based on our model we introduce a simple visualization for the stability characteristics of different points in the parameter space and an associated prediction function determining whether a point in the parameter space will be unstable. We built simple simulation and analysis frameworks for generating and interpreting data representing execution of these systems in the presence of mercenary miners following the greedy strategy.  Leveraging these frameworks we present a view into the different stability regions of the parameter space and reach the conclusion that the greedy mercenary mining strategy is profitable throughout a wide section of the parameter space.  We confirm our theoretical prediction of the instability region concluding that in the BTC / BTC difficulty adjustment case the region of instability in the parameter space is significant and  [impacts the transaction throughput of both systems TODO analysis function and figure quantifying this]. 
+
+[ Arnesh + Wyatt TODO BCH / BTC, BCH / BCH simulation results ] 
+
+[ Arnesh + Ahaan analysis of historical data sets ]
+
+
+\section*{Model and Assumptions}
+We make many simplifying assumptions when modeling this system.  The goal is to make enough assumptions to keep analysis tractable while at the same time parameterizing the problem in a way that gives insight to real systems of competing blockchains, and paves the way for more advanced modeling.  The following are global system assumptions 
+\begin{enumerate}
+\item
+There are two chains in the system, chain 1 and chain 2.  Both chains use the same proof of work and difficulty adjustment algorithm as the Bitcoin protocol [TODO when BCH difficulty is added in this will change]
+\item
+Each chain rewards miners with a coinbase transaction that pays out tokens to the miner that solves the block puzzle.  Additionally miners are rewarded by the transaction fees tied to the transactions serialized in the blocks.  We assume that the value of the total reward (in, say USD) of chain 1 is a constant $f_1$ and the value of the token of chain 2 is a constant $f_2$.  We do not account for variations in transaction fees or reductions in the coinbase payout in this analysis.  Only the ratio of these two parameters $\frac{f1}{f2}$ is relevant in our analysis.
 \item
 We model the total hashpower of the system as $H$ (hashes / second) and assume that it does not change over the period of analysis in question.  
 \item
 Fractions of the hashpower belong to three different entities, $\alpha$, $\beta_1$, $\beta_2$.  $\alpha$ + $\beta_1$ + $\beta_2$ = 1.
 \item
-We assume a fraction $\alpha$ of the hash power is willing to switch between chains in order to make a profit and furthermore that $\alpha$ belongs to a single pool.
+We assume a fraction $\alpha$ of the hash power, from here on out called the mercenary miners, is willing to switch between chains in order to make a profit.  In the case of our analysis of the Greedy Mercenary Mining strategy we do NOT need to make the assumption that the hashpower $\alpha$ belongs to a single pool.  This is elaborated further in the following section.
 \item
-$\beta_1$ and $\beta_2$ corresponding to miners who are loyal to chains 1 and 2 respectively.  These hashpower fractions do not move from their respective chains regardless of the profitability of switching.  For our purposes we can consider the hash power of $\beta_i$ as belonging to a single pool.
+$\beta_1$ and $\beta_2$ corresponding to miners who are loyal to chains 1 and 2 respectively.  These hashpower fractions do not move from their respective chains regardless of the profitability of switching.  We need not consider the hash power of $\beta_i$ as belonging to a single pool.
 \item
-The difficulty of each chain is adjusted every $b$ blocks.  The time it takes for $b$ blocks to be mined in epoch $i$ = $\Delta_i$.  To calculate the difficulty adjustment the protocol specifies that: $d_{i+1} = \frac{ d_i \cdot b \cdot 600 }{ \Delta_i}$, as in bitcoin.
+The difficulty of each chain is adjusted every $b$ blocks.  The time it takes for $b$ blocks to be mined in epoch $i$ = $\Delta_i$.  To calculate the difficulty adjustment the protocol specifies that: $d_{i+1} = \frac{ d_i \cdot b \cdot t_{target} }{ \Delta_i}$, as in bitcoin.  The target is 600s.
 
 \item
-We assume the system begins in a steady state where the difficulty of each chain reflects an initial allocation of the hash power.  We define $\alpha_{10}$ and $\alpha_{20}$ to be the initial allocation of free moving hash power fixed on chains 1 and 2 respectively before miners become profit seeking.
-\end{itemize}
-
-\subsection*{Breaking down the problem}
-All mining strategies will make use of some foundational calculations. Our analysis must frame these calculations in terms of parameters of our model.
-
-The fundamental calculation in this analysis is the switching decision criterion which determines some value to represent the profitability of chain 1 and chain 2 that guides decisions about allocating hash power to each chain among the switching miners.  Intuitively this value should only depend on the relative value of the two coinbases (recall this is fixed in our model) and the relative difficulty of each chain.  As we'll see below the relative difficulty of chains is determined by the hash power on the chains in the past.
-
-In reality the relative difficulty of chains depends on the time it takes for a number of blocks to be mined which is governed not only by the hash power on the chain but also an element of randomness in the system.  We will neglect to account for this randomness in our initial investigation of the greedy miner strategy to keep things simple.  We should come back to this simplification and reintroduce randomness in our analysis of miner strategy profitability. 
-
-All switching miner strategies will make decisions to move hash power between chains.  In general, strategies will consider switching hash power at the following \textbf{switching points}:
-\begin{enumerate}
-\item
-The starting point
-\item
-Any point in time where at least one chain's difficulty adjusts
+We assume the system begins in a steady state where the difficulty of each chain reflects the initial allocation of the hash power.  The mercenary miners begin by mining on chain 1.  Throughout the analysis chain 1 is given the asymetric advantage that $\frac{f1}{f2} \leq 1$
 \end{enumerate}
-The key point here is that there is nothing to be gained from a miner switching hash power before the difficulty adjusts because the decision values for each chain will be the same.  If we get around to including coinbase value changes into our model then this gets more complicated and strategies may need to consider switching hash power at each price change event.  Additionally the miner might be able to gain information from variance in block mining times if we start considering the variance in miner strategies and this might trigger additional switching points as well.
 
 \subsection*{Calculating the initial difficulty}
 
-At this point it is useful to calculate the initial difficulty in terms of model parameters.  This way we can calculate the initial switching criterion, and from here the future switching times and future switching criteria.  After making a few such calculations we can try to piece together the pattern of what is happening based on model parameters (either with reasoning or running simulations).  The following discussion applies to both chains but let's focus on Chain 1 wlog.
+From assumption (8) above we can calculate the initial difficulty, which is a value needed by the simulation framework.  We include the derivation here because the discussion is relevant for the subsequent derivation of the switching criterion for the greedy mining strategy.  
 
-Let's assume that the mining epoch before the beginning of our analysis took exactly 600 seconds on average (10 minutes) to find each block.  This is a fair assumption given that our model assumes beginning in a steady state.  The number of hashes tried until a block is successfully mined follows a geometric distribution and so the inverse of the probability of one success is equal to the mean number of hashes.  Given our steady state condition we have the following relation
+The following discussion applies to both chains and examines chain 1 without loss of generality.  By our steady state assumption that the mining epoch before the period of history in which our analysis takes place lasted exactly $(600 s)(b)$.  The number of hashes tried until a block is successfully mined follows a geometric distribution and by the properties of this distribution the inverse of the probability of one success is equal to the mean number of hashes until success.  Given our steady state condition and initial allocation we have the following relation
 $$
-600 H(\alpha_{01} + \beta_1) = \frac{1}{p}
+600 H(\alpha+ \beta_1) = \frac{1}{p}
 $$
 Where $p$ is the probability of one hash solving the block puzzle.
-Furthermore the difficulty of a chain is given by
+Recall that the difficulty of a chain is given by
 $$
 \frac{F_{\text{max}}}{F}
 $$
-where $F$ is the threshold value below which a hash solves the puzzle.  As the range of the hash function used in the chain puzzle is binary strings of 256 characters, $p = \frac{F}{2^{256}}$ and therefore
+where $F$ is the threshold value below which a block with the given hash solves the puzzle.  As the range of the hash function used in the chain puzzle is binary strings of 256 characters, $p = \frac{F}{2^{256}}$ and therefore
 \begin{align*}
-600 H(\alpha_{01} + \beta_1) &= \frac{2^{256}}{F}\\
-600 H(\alpha_{01} + \beta_1)F_{\text{max}} &= \frac{2^{256}F_{\text{max}}}{F}\\
-\frac{600 H(\alpha_{01} + \beta_1)F_{\text{max}} }{2^{256}} &= d_{10}
+600 H(\alpha + \beta_1) &= \frac{2^{256}}{F}\\
+600 H(\alpha + \beta_1)F_{\text{max}} &= \frac{2^{256}F_{\text{max}}}{F}\\
+\frac{600 H(\alpha + \beta_1)F_{\text{max}} }{2^{256}} &= d_{10}
 \end{align*}
-where $d_{1i}$ is the difficulty of Chain 1 in the $i$th epoch.  Factoring out constants we have
+where $d_{1i}$ is the difficulty of chain 1 in the $i$th adjustment period of chain 1.  Factoring out constants we have
 \begin{align*}
 \mathcal{D} &= \frac{600 HF_{\text{max}} }{2^{256}}\\
-d_{10} &= \mathcal{D} (\alpha_{10} + \beta_1)\\
-d_{20} &= \mathcal{D} (\alpha_{20} + \beta_1)\\
+d_{10} &= \mathcal{D} (\alpha + \beta_1)\\
+d_{20} &= \mathcal{D} (\beta_2)\\
 \end{align*}
 
-\subsection*{The Greedy strategy}
-One reasonable question is what happens if the switching miner decides to maximize for profit with a simple greedy algorithm.  At every switching point (as defined above) the miner looks at the immediate expected value of being on one chain or the other to chose which chain to mine on.
+\section*{The Greedy strategy}
+What happens if the switching miner decides to maximize for profit with a simple greedy algorithm, that is, an algorithm making no predictions about the future hash allocations or reward schedules of the two chains?  The sensible way to do this is to compare the expected rate of reward on both chains at any time.  We now show that the simplified form of the expected reward rate at difficulty adjustment period $i$ is simply $$\frac{f_1}{d_i} \cdot \alpha$$
+
+The expected profit to mine a chain during a given difficulty period is simply  
+\begin{align*}
+\text{reward per block} 
+\end{align*}
+
+In our simplifying model the fractional reward does not change 
+
+At every switching point (as defined above) the miner looks at the immediate expected value of being on one chain or the other to chose which chain to mine on.
 
 The miner must take time into account when making this decision.  If the miner can expect a reward with value 10 from mining on Chain 1 and 5 from mining on Chain 2 it might seem like the miner should pick Chain 1.  If Chain 1's expected reward is over a difficulty adjustment period that is 3 times longer than Chain 2's period however, this clearly is the wrong decision.  For this reason we frame the greedy algorithm in terms of profit rates.
 
@@ -131,9 +176,31 @@ $$
 $$
 and as $\alpha$ and $b$ are the same in both expressions, the comparison criterion the miner makes is to decide on the greater value among $\frac{f_1}{\alpha_{10} + \beta_1}$ and $\frac{f_2}{\alpha_{20} + \beta_2}$, which is simply the ratio between the value of the chain's coinbase and the fraction of the hashpower on the chain in the previous epoch.
 
+\subsubsection{Theoretical Analysis}
+
+
+\section{Simulations}
+
+\subsection{Methodology}
+
+
+\subsection{Results}
+
+
+\section{Other Strategies}
+[TODO Ahaan]
+
+
+\section{Optimal Protocol}
+
+\section{Historical Analysis of Data}
+[TODO Arnesh]
 
 
 %The next switching point is influenced by the miner's choice of which chain to mine on.  Call 
+
+\subsection{References}
+[1] https://bitcoinandtheblockchain.blogspot.co.uk/2017/08/chain-death-spiral-fatal-bitcoin.html?m=1
 
 
 
