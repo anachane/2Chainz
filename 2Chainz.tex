@@ -164,14 +164,29 @@ In our simplifying model the fractional reward does not change and therefore the
 
 A key observation regarding the profit rate is that while changes in the block reward and difficulty values influence which chain is most profitable, the addition or subtraction of other mercenary hash power within the same period does not affect the outcome on expectation.  Intuitively this is because the expected rate of block emission changes exactly inversely proportionally to the change in the expected winning fraction of a given mining pool.  This is encoded in the algebra above by the appearance of $(\alpha + \beta_j)$ in both the numerator and denominator.  As a consequence the choices of one greedy mercenary miner is not affected by the choices of another, at least in our simplifying fixed reward model.  This means that we can model $\alpha$ as the hash power of ALL mercenary miners, and that our results are easier to apply to this more general case.
 
+\subsubsection{Application to real mining}
+After deriving our simple greedy strategy independently, it turns out that our algorithm is apparently used by real-life mercenary miners, or as they are sometimes called "chain-hoppers".  Our switching criterion is known as the Difficulty Adjustment Reward Index by miners in the BCH community and is tracked by at least one BCH analytics site [2].
+
 \subsubsection{Theoretical Analysis}
 
-
 \section{Simulations}
+To confirm our hypotheses with greater confidence we built a small simulation and analysis framework in under 600 lines of python.  This simulation framework generates and saves data sets recording data for each difficulty adjustment period.  Sweeps are made to record this data throughout the parameter space.  The analysis framework reads data files and applies filters across subsections of data to flexibly generate values suitable for plotting from the raw data.  These techniques provided us with clear visualizations of the profitability and instability of different regions of the parameter space.
 
 \subsection{Methodology}
+Our code is located on github at: https://github.com/ZenGround0/2Chainz
+\subsubsection{Simulation Framework and Sweeps}
+The simulation framework generates a blockchain history from input parameters $\alpha$, $\beta_j$, $f_j$, $d_{0j}$, $b$ and $t_{\text{target}}$.  It mines blocks on each chain with a time drawn from an exponential distribution, records difficulty adjustments and places the mercenary hash power on the chain given by the strategy defined in section 5.  Each period of time between switching events is recorded as 2 4 tuples.  Each chain records (time, blocks mined, difficulty, hash power on chain)
 
+We broke our parameter space into 3 standard degrees of freedom: $\alpha$, $\beta_1$, and $\frac{f2}{f1}$.  We swept price fractions and $\beta$ values at precision of 0.01 and ran each such sweep with alpha values of 0.01, 0.05, 0.1, 0.2, 0.3.  We began by running 5 trials for each point and running for 100 difficulty adjustments.  Datasets are persisted to disk as csv files and each such sweep generates about 3 GB of data.
 
+ We performed a simple statistical analysis on the mean and standard deviations of the oscillation count data set to measure how much greater a sample size we should take to increase the confidence of our results.  The test showed that apart from a small subset of points well understood to be unstable 5 trials was more than enough to be 90\% confident in our samples.  Furthermore twice the amount of trials would be sufficient to get to 90\% confidence in the small subset of high variance points.
+
+[TODO not necessary but we could potentially justify far fewer difficulty adjustment periods to get meaningful data (expected profit, oscillations / hash power residency).  This would take some initial work but would result in much faster and probably more principled simulations.  Initial work would center around plotting out individual runs and looking for convergence patterns.  Alternatively looking for convergence patterns in the oscillation regions.  I am confident 100 runs is well past convergence, and also a little much given that it is 2 years of acutal time ]
+
+\subsubsection{Analysis Framework}
+We wrote a data processing and plotting script that leverages a simple map reduce framework to easily compose operations and make generation of plots easy to reason about.  We built a simple map reduce framework: the map function processes the data of a single trial's history and the reduce function aggregates together all of the values of all trials occurring at the same point in the parameter space.  The plots generated are of the entire parameter space sweep.  Each plot represents one value of $\alpha$, i.e. the combined hash rate of all mercenary miners.  The x-axis measures $\beta_1$, the hash rate loyal to the more powerful chain 1, and the y-axis measures the fraction $\frac{f2}{f1}$ between the values of 0 and 1.
+
+[TODO plots of individual runs.  This is a precursor for the previous TODO.  It is not necessary but might help present results + is necessary for reducing the number of difficulty adjustments in simulations in a principled way.  Also this is a pretty simple endeavor ~2 hours and it could shave lots and lots of time from simulations this week]
 \subsection{Results}
 
 
@@ -179,7 +194,9 @@ A key observation regarding the profit rate is that while changes in the block r
 [TODO Ahaan]
 
 
-\section{Optimal Protocol}
+\section{Protocol Leveraging Mercenaries}
+
+[TODO Wyatt]
 
 \section{Historical Analysis of Data}
 [TODO Arnesh]
@@ -189,7 +206,7 @@ A key observation regarding the profit rate is that while changes in the block r
 
 \subsection{References}
 [1] https://bitcoinandtheblockchain.blogspot.co.uk/2017/08/chain-death-spiral-fatal-bitcoin.html?m=1
-
+[2] https://fork.lol/reward/dari/btc
 
 
 \end{document}
