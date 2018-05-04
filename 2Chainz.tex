@@ -1,9 +1,10 @@
-\documentclass[12pt, preprint]{aastex}
+\documentclass[10pt, preprint]{aastex}
 \usepackage{fullpage,enumitem,amsmath,amssymb,graphicx}
 \usepackage{graphicx} % This is a package for including graphics in your solution.
 \usepackage{tikz}
 \usepackage{listings}
 \usetikzlibrary{automata, positioning, arrows}
+\DeclareMathOperator*{\argmax}{arg\,max}
 
 \tikzset{
 	->,
@@ -27,9 +28,8 @@ Date: & March 25th 2018 \\
 
 
 
-\section*{2Chainz -- Miner Dynamics Across Blockchains}
+\section{2Chainz -- Miner Dynamics Across Blockchains}
 
-\subsection{Introduction} 
 Items wrapped in * * need significant further thought
 Big goals of paper:
 \begin{enumerate}
@@ -71,12 +71,12 @@ D. Are miners following the mercenary strategy when they could be?
 1. plot of thresholds over time highlighting regions where the miners could have switched.  Point out and places where it looks like they do switch
 \end{enumerate}
 
-\section*{Abstract}
+\section{Abstract}
 We model the scenario where two blockchains have the same proof of work hash function and therefore miners can switch among chains at will.  We devise a principled simple strategy for choosing among competing blockchains that miners can follow.  We demonstrate that this strategy is profitable throughout a large region of the considered parameter space and classify different regions of the parameter space based on the behavior of miners following this profitable strategy.  We present an analysis of historical BTC / BCH data in light of our 
 
 Furthermore we investigate what an optimal switching strategy would look like if miners can make reasonable predictions about the future.  We also propose a candidate strategy for a blockchain designed to compete with an existing chain for hash power without flooding the market for its native token by minting coins at an excessive rate.
 
-\section*{Introduction}
+\section{Introduction}
 The recent Bitcoin Cash (BCH) fork of the Bitcoin (BTC) blockchain serves as an example of a relatively powerful fork of a blockchain network.  Such forks naturally lead to multiple blockchain networks using the same proof of work function.  In such a world "mercenary" miners can potentially increase profits by dynamically switching their hash power across chains.  Recent events have shown that this can have detrimental effects on the networks involved [1] due to drastic changes in profitability among chains and a slow response to large changes in hashrate that trace back to details in bitcoin's difficulty adjustment algorithm.
 
 The goal of our analysis is to study the scenario in which miners are willing to switch between two blockchains that run the same difficulty adjustment protocol to maximize their net profits.  We define a plausible parametrization of this system and then study potential chain-switching strategies that miners might employ in an attempt to increase their profits.  We begin by trying to understand the profitability over time of what we deemed the "greedy mercenary" approach, and the regions in which this leads to stable and unstable hash power allocations across chains.  From first principles we come up with a simple metric mercenary miners could use to decide on the best chain and end up rediscovering the so-called "Difficult Adjustment Reward Index" or DARI that miners actually use during operation. 
@@ -90,7 +90,7 @@ We model the system consisting of two chains both running BTC's difficulty adjus
 [ Arnesh + Ahaan analysis of historical data sets ]
 
 
-\section*{Model and Assumptions}
+\section{Model and Assumptions}
 We make many simplifying assumptions when modeling this system.  The goal is to make enough assumptions to keep analysis tractable while at the same time parameterizing the problem in a way that gives insight to real systems of competing blockchains, and paves the way for more advanced modeling.  The following are global system assumptions 
 \begin{enumerate}
 \item
@@ -98,7 +98,7 @@ There are two chains in the system, chain 1 and chain 2.  Both chains use the sa
 \item
 Each chain rewards miners with a coinbase transaction that pays out tokens to the miner that solves the block puzzle.  Additionally miners are rewarded by the transaction fees tied to the transactions serialized in the blocks.  We assume that the value of the total reward (in, say USD) of chain 1 is a constant $f_1$ and the value of the token of chain 2 is a constant $f_2$.  We do not account for variations in transaction fees or reductions in the coinbase payout in this analysis.  Only the ratio of these two parameters $\frac{f1}{f2}$ is relevant in our analysis.
 \item
-We model the total hashpower of the system as $H$ (hashes / second) and assume that it does not change over the period of analysis in question.  
+We model the total hash rate of the system as $H$ (hashes / second) and assume that it does not change over the period of analysis in question.  
 \item
 Fractions of the hashpower belong to three different entities, $\alpha$, $\beta_1$, $\beta_2$.  $\alpha$ + $\beta_1$ + $\beta_2$ = 1.
 \item
@@ -106,15 +106,15 @@ We assume a fraction $\alpha$ of the hash power, from here on out called the mer
 \item
 $\beta_1$ and $\beta_2$ corresponding to miners who are loyal to chains 1 and 2 respectively.  These hashpower fractions do not move from their respective chains regardless of the profitability of switching.  We need not consider the hash power of $\beta_i$ as belonging to a single pool.
 \item
-The difficulty of each chain is adjusted every $b$ blocks.  The time it takes for $b$ blocks to be mined in epoch $i$ = $\Delta_i$.  To calculate the difficulty adjustment the protocol specifies that: $d_{i+1} = \frac{ d_i \cdot b \cdot t_{target} }{ \Delta_i}$, as in bitcoin.  The target is 600s.
+The difficulty of each chain is adjusted every $b$ blocks.  The time it takes for $b$ blocks to be mined in epoch $i$ = $\Delta_i$.  To calculate the difficulty adjustment the protocol specifies that: $d_{i+1} = \frac{ d_i \cdot b \cdot t_{\text{target}} }{ \Delta_i}$, as in bitcoin.  The target is 600s.
 
 \item
 We assume the system begins in a steady state where the difficulty of each chain reflects the initial allocation of the hash power.  The mercenary miners begin by mining on chain 1.  Throughout the analysis chain 1 is given the asymetric advantage that $\frac{f1}{f2} \leq 1$
 \end{enumerate}
 
-\subsection*{Calculating the initial difficulty}
+\subsection{Calculating the initial difficulty}
 
-From assumption (8) above we can calculate the initial difficulty, which is a value needed by the simulation framework.  We include the derivation here because the discussion is relevant for the subsequent derivation of the switching criterion for the greedy mining strategy.  
+From assumption (8) above we can calculate the initial difficulty, which is an initial condition needed by the simulation framework.  We include the derivation here because the discussion is relevant for the subsequent derivation of the switching criterion for the greedy mining strategy.  
 
 The following discussion applies to both chains and examines chain 1 without loss of generality.  By our steady state assumption that the mining epoch before the period of history in which our analysis takes place lasted exactly $(600 s)(b)$.  The number of hashes tried until a block is successfully mined follows a geometric distribution and by the properties of this distribution the inverse of the probability of one success is equal to the mean number of hashes until success.  Given our steady state condition and initial allocation we have the following relation
 $$
@@ -133,48 +133,36 @@ where $F$ is the threshold value below which a block with the given hash solves 
 \end{align*}
 where $d_{1i}$ is the difficulty of chain 1 in the $i$th adjustment period of chain 1.  Factoring out constants we have
 \begin{align*}
-\mathcal{D} &= \frac{600 HF_{\text{max}} }{2^{256}}\\
-d_{10} &= \mathcal{D} (\alpha + \beta_1)\\
-d_{20} &= \mathcal{D} (\beta_2)\\
+\mathcal{D} &= \frac{HF_{\text{max}} }{2^{256}}\\
+d_{10} &= 600\mathcal{D} (\alpha + \beta_1)\\
+d_{20} &= 600\mathcal{D} (\beta_2)\\
 \end{align*}
 
-\section*{The Greedy strategy}
-What happens if the switching miner decides to maximize for profit with a simple greedy algorithm, that is, an algorithm making no predictions about the future hash allocations or reward schedules of the two chains?  The sensible way to do this is to compare the expected rate of reward on both chains at any time.  We now show that the simplified form of the expected reward rate at difficulty adjustment period $i$ is simply $$\frac{f_1}{d_i} \cdot \alpha$$
+\section{The Greedy strategy}
+What happens if the switching miner decides to maximize for profit with a simple greedy algorithm, that is, an algorithm making no predictions about the future hash allocations or reward schedules of the two chains?  The sensible way to do this is to compare the expected rate of reward on both chains at any time.  We now show that the simplified form of the expected reward rate at difficulty adjustment period $i$ is simply $$\frac{f_1}{d_i} \cdot \alpha$$.  Let $\mathcal{E}_{ij}[T]$ be the expected time to mine a block on chain $j$ in difficulty period $i$.  The expectation is taken over the randomness in solving hash puzzles while assuming the difficulty $d_i$ is known.  To start we assume that there is only one mercenary mining pool with hash power $\alpha$, and later show how to relax this assumption.
 
-The expected profit to mine a chain during a given difficulty period is simply  
+As we saw in the last section the expected time to find a block can be related to the chain difficulty:
 \begin{align*}
-\text{reward per block} 
+& \mathcal{E}_i[T] (\alpha + \beta_j)H = \frac{1}{p} \\
+& \mathcal{E}_i[T] (\alpha + \beta_j)H = \frac{2^{256}}{F_{i}}\\
+& \mathcal{E}_i[T] (\alpha + \beta_j)H = d_{ij} \frac{2^{256}}{F_{\text{max}}}\\
+& \mathcal{E}_i[T] = \frac{d_{ij}}{\mathcal{D}(\alpha + \beta_j)} \\
 \end{align*}
 
-In our simplifying model the fractional reward does not change 
-
-At every switching point (as defined above) the miner looks at the immediate expected value of being on one chain or the other to chose which chain to mine on.
-
-The miner must take time into account when making this decision.  If the miner can expect a reward with value 10 from mining on Chain 1 and 5 from mining on Chain 2 it might seem like the miner should pick Chain 1.  If Chain 1's expected reward is over a difficulty adjustment period that is 3 times longer than Chain 2's period however, this clearly is the wrong decision.  For this reason we frame the greedy algorithm in terms of profit rates.
-
-Note that a Greedy strategy implies that the switching miner will never hedge its bets and put fractions of its hash power on both chains in hopes of this adding up to future gains.  Therefore for $i \neq 0$ exactly one of $\alpha_{1i}, \alpha_{2i}$ = 0 and the other equals $\alpha$
-
-To calculate the profit rate of a miner on a given chain we begin by calculating the emission rate of blocks on that chain.  We use a similar idea to the difficulty calculation above.  The number of hashes it takes to mine a block in this new interval is still equal to the inverse of the probability of finding a solution hash.  However now that probability corresponds to the difficulty of the previous epoch on this chain.  We are no longer in a steady state and the hash power on the chain is no longer reflected on the difficulty of mining on the chain.  Call $\Delta_{11}$ the time it takes to mine a block on expectation in epoch 1.  The following then holds
+Now we can calculate the expected profit to mine on chain $j$ during difficulty period $i$ as follows
 \begin{align*}
-(\alpha_{11} + \beta_1)H\Delta_{11} &= \frac{2^{256}d_{10}}{F_{\text{max}}}\\
-(\alpha_{11} + \beta_1)H\Delta_{11} &= 600H(\alpha_{10} + \beta_1)\\
-\Delta_{11} &= 600 \frac{\alpha_{10} + \beta_1}{ \alpha_{11} + \beta_1}
+& \frac{\text{reward per block} }{\text{expected time per block}} \cdot (\text{expected winning fraction}) \\
+&= \frac{f_j}{\mathcal{E}_i[T]} \cdot \frac{\alpha}{\alpha + \beta_j}\\
+&= \frac{f_j \cdot \mathcal{D}(\alpha + \beta_j)}{d_{ij}} \cdot \frac{\alpha}{\alpha + \beta_j}\\
+&= \frac{f_j \cdot \mathcal{D}\alpha}{d_{ij}}\\
 \end{align*}
 
-This value will hold for the next $b$ blocks (until the next difficult adjustment).  For this epoch therefore, the average rate of block emission is 
-$$
-\frac{b}{\Delta_{11} }
-$$
-And therefore the average rate of profit for Chain 1 if the miner decides to mine on Chain 1 is
-\begin{align*}
-f_1 \frac{b}{\Delta_{11} } \frac{\alpha_{11}}{ \alpha_{11} + \beta_1} = \frac{f_1 ( \alpha_{11} + \beta_1) b \alpha_{11}}{(\alpha_{10} + \beta_1)(\alpha_{11} + \beta_1)} = \frac{f_1 b \alpha}{(\alpha_{10} + \beta_1)}\\
-\end{align*}
+As $\mathcal{D}$ and $\alpha$ appear in the profit rates of both chains, the greedy mercenary mining strategy checks the difficulty of the current period on each chain $d_1$ and $d_2$ and mines on chain
+$$\argmax{\frac{f_j}{d_j}}$$
 
-This is compared with the average rate of profit for Chain 2 which by symmetry is 
-$$
-\frac{f_2b\alpha}{\alpha_{20} + \beta_2}
-$$
-and as $\alpha$ and $b$ are the same in both expressions, the comparison criterion the miner makes is to decide on the greater value among $\frac{f_1}{\alpha_{10} + \beta_1}$ and $\frac{f_2}{\alpha_{20} + \beta_2}$, which is simply the ratio between the value of the chain's coinbase and the fraction of the hashpower on the chain in the previous epoch.
+In our simplifying model the fractional reward does not change and therefore the miner will only benefit from switching when one of the chains adjusts its difficulty.  When one profit rate is strictly greater than the other the mercenary miner does not stand to benefit in the short term from allocating some hashpower to the less profitable chain so all $\alpha$ goes to the most profitable chain.  In the case both profit rates are equal the greedy mercenary miner chooses a chain at random. 
+
+A key observation regarding the profit rate is that while changes in the block reward and difficulty values influence which chain is most profitable, the addition or subtraction of other mercenary hash power within the same period does not affect the outcome on expectation.  Intuitively this is because the expected rate of block emission changes exactly inversely proportionally to the change in the expected winning fraction of a given mining pool.  This is encoded in the algebra above by the appearance of $(\alpha + \beta_j)$ in both the numerator and denominator.  As a consequence the choices of one greedy mercenary miner is not affected by the choices of another, at least in our simplifying fixed reward model.  This means that we can model $\alpha$ as the hash power of ALL mercenary miners, and that our results are easier to apply to this more general case.
 
 \subsubsection{Theoretical Analysis}
 
