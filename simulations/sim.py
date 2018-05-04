@@ -131,7 +131,7 @@ class Simulation:
         self.numAdjPeriods = numAdjPeriods
         nprand.seed()
         self.stepSize = 0.01
-        self.runsPerStep = 5
+        self.runsPerStep = 3
 
         return
 
@@ -139,8 +139,7 @@ class Simulation:
     # a provided dataFun that processes the results of the 
     def runGreedy(self):
         alphaMap = {}
-#        for alpha in [0.01, 0.05, 0.1, 0.2, 0.3]:
-        for alpha in [0.2, 0.3]:
+        for alpha in [0.01, 0.05, 0.1]:
             beta1Map = {}
             alphaMap[alpha] = beta1Map
             beta1 = self.stepSize
@@ -199,12 +198,21 @@ class Simulation:
                 chain1.updateDifficulty()
                 chain1.blocks = 0
                 chain1.timeSinceAdj = 0.0
+                chain2.timeSinceAdj += chain1.timeThisPeriod - chain2.timeThisPeriod
 
             # Difficulty of chain 2 adjusts
             if chain2.blocks == chain2.blockNum:
                 chain2.updateDifficulty()
                 chain2.blocks = 0
                 chain2.timeSinceAdj = 0.0
+                chain1.timeSinceAdj += chain2.timeThisPeriod - chain1.timeThisPeriod
+
+            # Difficult of chain 2 not adjusting, keep track of burnt time at end of period
+            if chain2.blocks != chain2.blockNum:
+                chain2.timeSinceAdj += chain1.timeThisPeriod - chain2.timeThisPeriod
+
+            if chain1.blocks != chain1.blockNum:
+                chain1.timeSinceAdj += chain2.timeThisPeriod - chain1.timeThisPeriod
 
             chain1.timeThisPeriod = 0.0
             chain2.timeThisPeriod = 0.0

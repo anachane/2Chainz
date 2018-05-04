@@ -135,17 +135,27 @@ def countOsc10Map(ch1, ch2):
 def countProfitMap(ch1, ch2):
     expectedProfit = 0.0
     tNorm = finishTimeMap(ch1, ch2)
-    profitNorm = (tNorm / 600.0) * (ch1.alpha / ch1.beta + ch1.alpha) * ch1.tokenValue
+    profitNorm = (tNorm / 600.0) * (ch1.alpha / (ch1.beta + ch1.alpha)) * ch1.tokenValue
+    alreadyMined = 0
     for period in ch1.periods:
         switchHash = float(period.hashRate) - ch1.beta
+        blocks = int(period.blocks) - alreadyMined
+        alreadyMined = int(period.blocks)
         if switchHash > 0.0:
-            expectedProfit += ch1.tokenValue * int(period.blocks) * (switchHash / float(period.hashRate))
+            expectedProfit += ch1.tokenValue * blocks * (switchHash / float(period.hashRate))
+        if alreadyMined == 2016:
+            alreadyMined = 0
 
+    alreadyMined = 0
     for period in ch2.periods:
         switchHash = float(period.hashRate) - ch2.beta
+        blocks = int(period.blocks) - alreadyMined
+        alreadyMined = int(period.blocks)        
         if switchHash > 0.001:
             expectedProfit += ch2.tokenValue * int(period.blocks) * (switchHash / float(period.hashRate))
-    return expectedProfit - profitNorm
+        if alreadyMined == 2016:
+            alreadyMined = 0
+    return expectedProfit / profitNorm
 
 # diffLeap returns 1 if there is a difficulty adjustment greater than 4x in
 # either direction.  If this happens a lot then that means simulations should
@@ -189,15 +199,67 @@ def diffLeapMap(ch1, ch2):
 # complete 100 difficulty adjustments.  Note this function needs to change
 # when analyzing runs of greater or fewer than 100 diff adjustments
 def finishTimeMap(ch1, ch2):
-    totalTime1 = 0.0
-    for period in ch1.periods:
-        totalTime1 += float(period.timeSinceAdj) # TODO fix misnomer in sim code this is actually just time in period
+    totalTime = 0.0
 
-    totalTime2 = 0.0
-    for period in ch2.periods:
-        totalTime2 += float(period.timeSinceAdj)
+    for i, _ in enumerate(ch1.periods):
+        totalTime += max(float(ch1.periods[i].timeSinceAdj), float(ch2.periods[i].timeSinceAdj))
         
-    return abs(totalTime1 - totalTime2)
+    return totalTime
+
+def timePerBlockCh1Map(ch1, ch2):
+    fT = finishTimeMap(ch1, ch2)
+    totalBlocks = 0
+    alreadyMined = 0
+    for period in ch1.periods:
+        totalBlocks += int(period.blocks) - alreadyMined
+        alreadyMined = int(period.blocks)
+        if alreadyMined == 2016:
+            alreadyMined = 0    
+    return fT / totalBlocks
+
+def totalBlocks(ch1, ch2):
+    blocks1 = 0
+    for period in ch1.periods:
+        blocks1 += int(period.blocks)
+        
+    blocks2 = 0
+    for period in ch2.periods:
+        blocks2 += int(period.blocks)
+
+    return blocks1 + blocks2
+    
+
+# expected blocks without moving - blocks mined
+def blocks1ValidateMap(ch1, ch2):
+    tNorm = finishTimeMap(ch1, ch2)
+    blockNorm = int(tNorm / 600.0)
+    blocks1 = 0
+    for period in ch1.periods:
+        blocks1 += int(period.blocks)
+    return blocks1 - blockNorm
+
+def blocks2ValidateMap(ch1, ch2):
+    tNorm = finishTimeMap(ch1, ch2)
+    blockNorm = int(tNorm / 600.0)
+    blocks2 = 0
+    for period in ch2.periods:
+        blocks2 += int(period.blocks)
+    return blocks2 - blockNorm
+
+def avgDiffAdjTime1Map(ch1, ch2):
+    totalTime = finishTimeMap(ch1, ch2)
+    numAdjs = 0.0
+    blockSum = 0
+    for period in ch1.periods:
+        blockSum += int(period.blocks)
+        if blockSum == 2016:
+            numAdjs += 1
+            blockSum = 0
+    return totalTime / numAdjs
+
+def avgDiffAdjTime2Map(ch1, ch2):
+    return
+    
 
 # blockDiff returns the number of blocks mined by ch2 minus the number of
 # blocks mined by ch1
@@ -286,6 +348,7 @@ def sampleNumReduce(results):
 
             
 if __name__ == "__main__":
-   data = loadResults("results/big-run-0", finishTimeMap, maxReduce)
-   analysis = Analysis(0.01, data, "finish time diff")
+   data = loadResults("results/big-run-0", countProfitMap, meanReduce)
+   analysis = Analysis(0.01, data, "normalized-profit")
    analysis.plotResults()
+
