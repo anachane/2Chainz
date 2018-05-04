@@ -85,9 +85,9 @@ The goal of our analysis is to study the scenario in which miners are willing to
 
 We model the system consisting of two chains both running BTC's difficulty adjustment protocol but sweeping different reward fractions, "loyal" hashrates and mercenary hashrate.  Based on our model we introduce a simple visualization for the stability characteristics of different points in the parameter space and an associated prediction function determining whether a point in the parameter space will be unstable. We built simple simulation and analysis frameworks for generating and interpreting data representing execution of these systems in the presence of mercenary miners following the greedy strategy.  Leveraging these frameworks we present a view into the different stability regions of the parameter space and reach the conclusion that the greedy mercenary mining strategy is profitable throughout a wide section of the parameter space.  We confirm our theoretical prediction of the instability region concluding that in the BTC / BTC difficulty adjustment case the region of instability in the parameter space is significant and  [impacts the transaction throughput of both systems TODO analysis function and figure quantifying this]. 
 
-[ Arnesh + Wyatt TODO BCH / BTC, BCH / BCH simulation results ] 
+[ Arnesh + Wyatt TODO BCH / BTC, BCH / BCH simulation results would be a great addition to this paper and seems within reach with one week remaining ] 
 
-[ Arnesh + Ahaan analysis of historical data sets ]
+[ Arnesh + Ahaan analysis of historical data sets, maybe this should be skipped as DARI is already plotted by fork.lol? ]
 
 
 \section{Model and Assumptions}
@@ -168,6 +168,12 @@ A key observation regarding the profit rate is that while changes in the block r
 After deriving our simple greedy strategy independently, it turns out that our algorithm is apparently used by real-life mercenary miners, or as they are sometimes called "chain-hoppers".  Our switching criterion is known as the Difficulty Adjustment Reward Index by miners in the BCH community and is tracked by at least one BCH analytics site [2].
 
 \subsubsection{Theoretical Analysis}
+Given the mechanism of the greedy mercenary mining strategy and the properties of the protocol difficulty, one useful characterization of a two chain system is the ordering of the four values: 
+$$
+\frac{f2}{\alpha + \beta_2}, \frac{f2}{\beta_2}, \frac{f1}{\alpha + \beta_1}, \frac{f1}{\beta_1}
+$$
+In a rough sense the value $\frac{fj}{\alpha + \beta_j}$ can be thought of as the least profitable expected profit rate and $\frac{fj}{\beta_j}$ the most profitable expected profit rate on chain $j$.  This is because the difficulty on chain 2 comes from a distribution with a mean proportional to the average hash rate on the previous interval and the greatest and least possible such average hash rates are $\alpha + \beta_j$ and $\beta_j$ respectively.  In the case where miners switching in the middle of one of chain $j$'s adjustment periods due to a profitability adjustment triggered by the other chain adjusting its difficulty, then the average hash rate, and therefore expected difficulty value on chain $j$ in the next period will be between these two extreme values.
+
 
 \section{Simulations}
 To confirm our hypotheses with greater confidence we built a small simulation and analysis framework in under 600 lines of python.  This simulation framework generates and saves data sets recording data for each difficulty adjustment period.  Sweeps are made to record this data throughout the parameter space.  The analysis framework reads data files and applies filters across subsections of data to flexibly generate values suitable for plotting from the raw data.  These techniques provided us with clear visualizations of the profitability and instability of different regions of the parameter space.
@@ -179,9 +185,9 @@ The simulation framework generates a blockchain history from input parameters $\
 
 We broke our parameter space into 3 standard degrees of freedom: $\alpha$, $\beta_1$, and $\frac{f2}{f1}$.  We swept price fractions and $\beta$ values at precision of 0.01 and ran each such sweep with alpha values of 0.01, 0.05, 0.1, 0.2, 0.3.  We began by running 5 trials for each point and running for 100 difficulty adjustments.  Datasets are persisted to disk as csv files and each such sweep generates about 3 GB of data.
 
- We performed a simple statistical analysis on the mean and standard deviations of the oscillation count data set to measure how much greater a sample size we should take to increase the confidence of our results.  The test showed that apart from a small subset of points well understood to be unstable 5 trials was more than enough to be 90\% confident in our samples.  Furthermore twice the amount of trials would be sufficient to get to 90\% confidence in the small subset of high variance points.
+ We performed a simple statistical analysis on the mean and standard deviations of the oscillation count data set to measure how much greater a sample size we should take to increase our confidence in the results.  The test showed that apart from a small subset of points well understood to be highly variant, 5 trials was more than enough to be 90\% confident in our samples.  Furthermore only 5 more trials would be sufficient to get to 90\% confidence in the small subset of high variance points.
 
-[TODO not necessary but we could potentially justify far fewer difficulty adjustment periods to get meaningful data (expected profit, oscillations / hash power residency).  This would take some initial work but would result in much faster and probably more principled simulations.  Initial work would center around plotting out individual runs and looking for convergence patterns.  Alternatively looking for convergence patterns in the oscillation regions.  I am confident 100 runs is well past convergence, and also a little much given that it is 2 years of acutal time ]
+[TODO not necessary but we could potentially justify far fewer difficulty adjustment periods to get meaningful data (expected profit, oscillations / hash power residency).  This would take some initial work but would result in much faster and probably more principled simulations.  Initial work would center around plotting out individual runs and looking for convergence patterns.  Alternatively coming up with a map function measuring a meaningful notion of convergence in the parameter space and running a normal plot job.  I am confident 100 runs is well past convergence, and also a little much given that it is 2 years of acutal time ]
 
 \subsubsection{Analysis Framework}
 We wrote a data processing and plotting script that leverages a simple map reduce framework to easily compose operations and make generation of plots easy to reason about.  We built a simple map reduce framework: the map function processes the data of a single trial's history and the reduce function aggregates together all of the values of all trials occurring at the same point in the parameter space.  The plots generated are of the entire parameter space sweep.  Each plot represents one value of $\alpha$, i.e. the combined hash rate of all mercenary miners.  The x-axis measures $\beta_1$, the hash rate loyal to the more powerful chain 1, and the y-axis measures the fraction $\frac{f2}{f1}$ between the values of 0 and 1.
@@ -190,11 +196,11 @@ We wrote a data processing and plotting script that leverages a simple map reduc
 \subsection{Results}
 
 
-\section{Other Strategies}
+\section{Other Mercenary Strategies}
 [TODO Ahaan]
 
 
-\section{Protocol Leveraging Mercenaries}
+\section{Blockchain Protocol Leveraging Mercenaries}
 
 [TODO Wyatt]
 
