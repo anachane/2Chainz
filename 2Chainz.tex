@@ -1,5 +1,5 @@
 \documentclass[10pt, preprint]{aastex}
-\usepackage{fullpage,enumitem,amsmath,amssymb,graphicx}
+\usepackage{fullpage,enumitem,amsmath,amssymb,graphicx, subfigure}
 \usepackage{graphicx} % This is a package for including graphics in your solution.
 \usepackage{tikz}
 \usepackage{listings}
@@ -168,6 +168,31 @@ A key observation regarding the profit rate is that while changes in the block r
 After deriving our simple greedy strategy independently, it turns out that our algorithm is apparently used by real-life mercenary miners, or as they are sometimes called "chain-hoppers".  Our switching criterion is known as the Difficulty Adjustment Reward Index by miners in the BCH community and is tracked by at least one BCH analytics site [2].
 
 \subsubsection{Theoretical Analysis}
+[TODO -- Figure one needs axes revamp (0 to 1 not 100) and should be taken over a finer grained step sizes to get smoother plots.  Also we should get rid of pplot for this graph]
+\begin{figure}
+	\centering
+	\subfigure[$\alpha=0.01$]{
+		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-01.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.05$]{
+		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-05.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.1$]{
+		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-1.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.3$]{
+		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-3.png}
+		\label{fig:theo}
+		}		
+	\caption{Orderings over different regions of parameter space. Index -- Red: (1), Orange: (2), Cyan: (3), Blue: (4), Yellow: (5)}
+\end{figure}
+
 Given the mechanism of the greedy mercenary mining strategy and the properties of the protocol difficulty, one useful characterization of a two chain system is the ordering of the four values: 
 $$
 \frac{f_2}{\alpha + \beta_2}, \frac{f_2}{\beta_2}, \frac{f_1}{\alpha + \beta_1}, \frac{f_1}{\beta_1}
@@ -194,7 +219,7 @@ Any point in the parameter space defined by: $(\alpha, \beta_1, \beta_2, f_1, f_
 
 We do not expect oscillations for systems with orderings (1) or (2).  In these cases one chain's lowest profitability rate is higher than the other chain's highest rate and and no mercenary greedy miner would ever switch to the less profitable chain.  
 
-We expect oscillations in the remaining orderings (3), (4), (5), (6).  Orderings (5) and (6) result in oscillations with a single mode.  In ordering (5) when the difficulty of chain 1 is at its lowest point then mercenaries flock to chain 1, but when the difficulty is at its maximum value they move to chain 2, and symmetrically for ordering (6).  Orderings (3) and (4) are a bit more complex.  Like ordering (5), in ordering (3) when chain 1's difficulty is at its lowest mercenaries move to chain 1.  However mercenaries do not always move to chain 2 when chain 1's difficulty is at its max value, this now depends on the difficulty of chain 2 as well.  Figure 1 plots the ordering corresponding to each point in parameter space, hypothesizing the region of instability.
+We expect oscillations in the remaining orderings (3), (4), (5), (6).  Orderings (5) and (6) result in oscillations with a single mode.  In ordering (5) when the difficulty of chain 1 is at its lowest point then mercenaries flock to chain 1, but when the difficulty is at its maximum value they move to chain 2, and symmetrically for ordering (6).  Orderings (3) and (4) are a bit more complex.  Like ordering (5), in ordering (3) when chain 1's difficulty is at its lowest mercenaries move to chain 1.  However mercenaries do not always move to chain 2 when chain 1's difficulty is at its max value, this now depends on the difficulty of chain 2 as well.  Figure 1 plots the ordering corresponding to each point in parameter space, hypothesizing the region of instability. 
 
 Note that there are a few simplifications here.  Most obviously because difficulty tracks with block discovery time which is not deterministic, the values in the orderings do not perfectly correspond to the actual values that will be compared by the mercenary miners during system execution.  In reality the difficulty adjustment alogirthm samples the ordering values in a distribution surrounding the values listed here.  This could lead to different systems in the parameter space displaying different orderings at different difficulty adjustment periods.  For example a system with ordering (2) could have middle points very close such that after a given adjustment $\frac{f_1}{\beta_1} >\frac{f_2}{\alpha + \beta_2}$, giving the system ordering (4).
 
@@ -219,7 +244,30 @@ We wrote a data processing and plotting script that leverages a simple map reduc
 
 [TODO plots of individual runs.  This is a precursor for the previous TODO.  It is not necessary but might help present results + is necessary for reducing the number of difficulty adjustments in simulations in a principled way.  Also this is a pretty simple endeavor ~2 hours and it could shave lots and lots of time from simulations this week]
 \subsection{Results}
-
+Figure 2 shows the mean number of oscillations across all trials at each point swept for the simulated model.  The results are close to those predicted in Figure 1, but the oscillation regions extend past the predicted boundaries due to the element of randomness complicating the true ordering of profit rates between chains discussed in 5.0.2.  As the hash power of mercenary miners increases, greater 
+\begin{figure}
+	\centering
+	\subfigure[$\alpha=0.01$]{
+		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-01.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.05$]{
+		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-05.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.1$]{
+		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-1.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.3$]{
+		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-3.png}
+		\label{fig:theo}
+		}		
+	\caption{Orderings over different regions of parameter space. Index -- Red: (1), Orange: (2), Cyan: (3), Blue: (4), Yellow: (5)}
+\end{figure}
 
 \section{Other Mercenary Strategies}
 [TODO Ahaan]
