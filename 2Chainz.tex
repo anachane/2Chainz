@@ -15,7 +15,7 @@
 \begin{document}
 
 \begin{center}
-{\Large CS 6466 2Chainz}
+{\Large CS 6466 2 Chains: Miner Dynamics Across Blockchains}
 
 
 \begin{tabular}{lr}
@@ -26,50 +26,6 @@ Date: & March 25th 2018 \\
 \end{tabular}
 \end{center}
 
-
-
-\section{2Chainz -- Miner Dynamics Across Blockchains}
-
-Items wrapped in * * need significant further thought
-Big goals of paper:
-\begin{enumerate}
-\item
-Exploring fundamentals
-\begin{enumerate}
-\item
-Define the model we used, communicate its strengths and shortcomings
-\item
-Come up with a reasonable "greedy" mercenary miner strategy. Justify why miners would want to run this strategy and how it works.
-\item
-Explore the strategies implications from first principles.  Plot expected unstable regions.  Present a diagram of the four relevant quantities and how their ordering and difficulty adjustment creates sustained oscillations of hash power between the chains
-\item
-Describe the simulation framework and methodology.  Present simulation results.  Show the empirical breakdown of the parameter space into regions.  Quantify how the smaller chain's hash power distribution changes over the space.  Quantify the profitability of the scheme as compared to staying loyal to the first chain.
-\end{enumerate}
-\item
-Extending Miner strategies
-\begin{enumerate}
-\item
-*specify a strategy and discuss whether it is optimal*
-\item
-*Compare to greedy with simulations*
-\end{enumerate}
-\item
- Blockchain Protocol Gaming Greedy Mercenary Miners
- \begin{enumerate}
- \item
-Define slight updates to the model.  The protocol is trying to optimize for hashrate on the chain and reducing the number of coins minted compared to the other chain.
-\item
-Describe the update protocol and motivation for it coming from the diagrams of A.2
-\item
-*Do some analysis of the optimality of this protocol, the gained hashrate for a target minting threshold as a function of parameters*
-\item
-*Simulations that run this protocol and record the minting savings and hashrate purchase*
-\end{enumerate}
-
-\item
-D. Are miners following the mercenary strategy when they could be?
-1. plot of thresholds over time highlighting regions where the miners could have switched.  Point out and places where it looks like they do switch
-\end{enumerate}
 
 \section{Abstract}
 We model the scenario where two blockchains have the same proof of work hash function and therefore miners can switch among chains at will.  We devise a principled simple strategy for choosing among competing blockchains that miners can follow.  We demonstrate that this strategy is profitable throughout a large region of the considered parameter space and classify different regions of the parameter space based on the behavior of miners following this profitable strategy.  We present an analysis of historical BTC / BCH data in light of our 
@@ -244,38 +200,150 @@ We wrote a data processing and plotting script that leverages a simple map reduc
 
 [TODO plots of individual runs.  This is a precursor for the previous TODO.  It is not necessary but might help present results + is necessary for reducing the number of difficulty adjustments in simulations in a principled way.  Also this is a pretty simple endeavor ~2 hours and it could shave lots and lots of time from simulations this week]
 \subsection{Results}
-Figure 2 shows the mean number of oscillations across all trials at each point swept for the simulated model.  The results are close to those predicted in Figure 1, but the oscillation regions extend past the predicted boundaries due to the element of randomness complicating the true ordering of profit rates between chains discussed in 5.0.2.  As the hash power of mercenary miners increases, greater 
+Figure 2 shows the mean number of oscillations across all trials at each point swept for the simulated model.  The results are close to those predicted in Figure 1, but the oscillation regions extend past the predicted boundaries due to the element of randomness complicating the true ordering of profit rates between chains discussed in 5.0.2.  As the hash power of mercenary miners increases, a larger region of the parameter space is unstable.
+[TODO -- axes labeled right, perhaps nicer font and sizing for axes.  Title could be formatted better too but not essential]
 \begin{figure}
 	\centering
 	\subfigure[$\alpha=0.01$]{
-		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-01.png}
+		\includegraphics[width=0.25\linewidth]{simulations/mean-oscillations-alpha=0-01.png}
 		\label{fig:theo}
 		}
 	\qquad
 	\subfigure[$\alpha=0.05$]{
-		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-05.png}
+		\includegraphics[width=0.25\linewidth]{simulations/mean-oscillations-alpha=0-05.png}
 		\label{fig:theo}
 		}
 	\qquad
 	\subfigure[$\alpha=0.1$]{
-		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-1.png}
+		\includegraphics[width=0.25\linewidth]{simulations/mean-oscillations-alpha=0-1.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.2$]{
+		\includegraphics[width=0.25\linewidth]{simulations/mean-oscillations-alpha=0-2.png}
 		\label{fig:theo}
 		}
 	\qquad
 	\subfigure[$\alpha=0.3$]{
-		\includegraphics[width=0.3\linewidth]{simulations/results/osc-regions-prediction-alpha=0-3.png}
+		\includegraphics[width=0.25\linewidth]{simulations/mean-oscillations-alpha=0-3.png}
 		\label{fig:theo}
 		}		
-	\caption{Orderings over different regions of parameter space. Index -- Red: (1), Orange: (2), Cyan: (3), Blue: (4), Yellow: (5)}
+	\caption{Mean number of oscillations over 100 difficulty adjustment periods.  One oscillation occurs when the mercenary hash power switches between chains once.}
 \end{figure}
 
+[TODO -- remove the scale on the right from all, and fix axes]
+Figure 3 marks in green regions where no oscillations occur in all trials (region 1), in red regions where only one oscillation from chain 1 to chain 2 occurs in all trials (region 2), and in blue regions where more than one oscillation occurs in at least one trial (region 3)
+\begin{figure}
+	\centering
+	\subfigure[$\alpha=0.01$]{
+		\includegraphics[width=0.25\linewidth]{simulations/osc-region-alpha=0-01.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.05$]{
+		\includegraphics[width=0.25\linewidth]{simulations/osc-region-alpha=0-05.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.1$]{
+		\includegraphics[width=0.25\linewidth]{simulations/osc-region-alpha=0-1.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.2$]{
+		\includegraphics[width=0.25\linewidth]{simulations/osc-region-alpha=0-2.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.3$]{
+		\includegraphics[width=0.25\linewidth]{simulations/osc-region-alpha=0-3.png}
+		\label{fig:theo}
+		}		
+	\caption{Different stability regions.  Chain 1 dominates in region 1 in green.  Chain 2 dominates in region 3 in red, oscillations occur in blue.  As alpha increases the region of instability consumes most of the parameter space.}
+\end{figure}
+
+[TODO -- fix axes, try to understand tragedy of the commons a little better ]
+Figure 4 shows the average expected profit of a mercenary following the greedy strategy taken over the simulation trials normalized by the expected profit if the mercenary hashrate had stayed on chain 1.  It is calculated by adding up $b_i \cdot \frac{\alpha}{\alpha + \beta_j} \cdot f_j$ for both chains $j=1,2$ for all periods $i$ where the mercenary hash rate is resident on that chain.
+
+\begin{figure}
+	\centering
+	\subfigure[$\alpha=0.01$]{
+		\includegraphics[width=0.25\linewidth]{simulations/normalized-profit-alpha=0-01.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.05$]{
+		\includegraphics[width=0.25\linewidth]{simulations/normalized-profit-alpha=0-05.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.1$]{
+		\includegraphics[width=0.25\linewidth]{simulations/normalized-profit-alpha=0-1.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.2$]{
+		\includegraphics[width=0.25\linewidth]{simulations/normalized-profit-alpha=0-2.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.3$]{
+		\includegraphics[width=0.25\linewidth]{simulations/normalized-profit-alpha=0-3.png}
+		\label{fig:theo}
+		}		
+	\caption{Normalized profitability of the greedy mercenary strategy.  This strategy is profitable throughout regions 2 and 3, and is relatively highest when chain 2's reward is relatively high and chain 2's loyal hash rate is relatively low.  There is a tragedy of the commons where low total mercenary mining hash rate pays out relatively more than higher hash rates.}
+\end{figure}
+
+Figure 5 compares average time per block.  In general the lengthened block times of chains that have had their difficulty adjusted for but are then abandoned by mercenary miners outweigh the shortened block times in periods where the difficulty is not adjusted for mercenary miners.  This effect is visible in region 2.  As $\alpha$ increases the disruption in availability becomes more sever.
+\begin{figure}
+	\centering
+	\subfigure[$\alpha=0.01$]{
+		\includegraphics[width=0.25\linewidth]{simulations/time-per-block-ch1-alpha=0-1.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.05$]{
+		\includegraphics[width=0.25\linewidth]{simulations/time-per-block-ch1-alpha=0-2.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.1$]{
+		\includegraphics[width=0.25\linewidth]{simulations/time-per-block-ch1-alpha=0-3.png}
+		\label{fig:theo}
+		}	
+	\caption{Average block time.  Oscillations in mercenary hash power between chains on the whole decrease availability of the chains' transaction processing by slowing down block times on average.  The problem becomes more severe for higher $\alpha$}
+\end{figure}
+
+
 \section{Other Mercenary Strategies}
-[TODO Ahaan]
+[TODO Ahaan is greedy optimal?]
+[TODO Ahaan can you find a counter example?]
 
 
-\section{Blockchain Protocol Leveraging Mercenaries}
+\section{A Competitive Protocol Leveraging Mercenaries}
+One natural question following this analysis is whether a protocol could use the behavior of mercenary miners to its advantage when in competition with another chain.  This is interesting because new forks of more established protocols, such as the BCH fork of BTC, are often disadvantaged in terms of token exchange rate and total hash power but have the advantage of greater flexibility in defining new protocol rules.  These rules could potentially exploit the incentives of miners in two chain systems to become more advantaged along certain metrics.  Here we consider a simple technique in light of our understanding of the greedy mercenary miner strategy that could be used by such a competing blockchain protocol.  We begin by considering two metrics for which these networks might sensibly want to optimize.
 
-[TODO Wyatt]
+A blockchain network has a vested interest in attracting a large share of the existing hash power applicable to its proof of work operating on its chain.  If hash power from a competing chain can be coordinated against a comparatively weaker chain then 51\% attacks and associated untrustworthy or unavailable transaction processing become a greater risk.  For this reason we consider the fraction of hash power out of the total pool of hash power relevant to the chain's proof of work to be a number that a protocol wishes to maximize.
+
+Furthermore we hypothesize the rate at which a protocol specifies tokens are to be minted is a relevant metric.  The basic thinking is that if more tokens are mined then the markets for these tokens will see a decrease in value and the block reward's value will go down, creating a spiral where hashpower leaves a chain because miners find better profit elsewhere. We are not economists and recognize there is a great deal of complexity that could be explored here, but we'll assume throughout this section that the rate of tokens minted is something that chains would like to keep below some threshold.  The general structure of the technique outlined below should be useful even with a more complex optimization criterion for the minting rate.
+
+\subsection{Getting the Best Deal}
+The key idea behind our technique is that the hashpower of mercenary miners is effectively purchased by the protocol increasing its minting rate.  Mercenaries see more profit when difficulty is low on a chain and move their hashpower to this chain for the tradeoff of tokens of this chain being mined at a higher rate than before.  Another way to put this is that the expected profit rate calculation miners use to decide which chain to mine on is proportional to the minting rate of the chain.  Our technique is based on the following observation: mercenary miners in our model are incentivized to mine on the less powerful competing chain when its expected rate of profit is higher, however this chain could potentially push its expected rate of profit lower while maintaining incentive for the mercenaries to stay on its chain.  A chain using this technique would set its profit rate as low as possible, $\epsilon$ above the profit rate of the competing chain. 
+
+To achieve this expected profit, and therefore minting, rate reduction a protocol has two options: raise the difficulty or reduce the token reward per block.  Raising the difficulty causes external effects that would likely harm the system's function, i.e. transaction throughput would be variably adjusted and hence unreliable.  Perhaps this is acceptable for a chain launching an attack against a stronger competitor as its primary purpose.  The alternate of modifying the coinbase token reward dynamically does not suffer from throughput reductions however, and it achieves the same purpose.  Note that to actually build a protocol that sets the profit rate this way, it is essential to measure the profit rate of the competing chain: $\frac{f_1}{d_1}$.  There is already a great way to get a value for $d_1$: the attacking protocol could maintain the competitor chain and measure directly from solutions to block puzzles.  Part of $f_1$ could be measured directly as well by looking at the coinbase transaction and fees of each block.  However the protocol itself would need to access an oracle for the values of the exchange rates of the two tokens.
+
+In region 1 where chain 1 always controls the mercenaries, taking control of the $\alpha$ fraction of hash power requires raising the minting rate beyond the steady state of the protocol.
+
+In region 2 chain 2 can lower its minting rate below the original steady state and still maintain control of the mercenary hash power.
+
+In parts of region 3 chain 2 must raise its minting rate and in some parts it can lower its minting rate compared with the steady state to maintain control of mercenary hash power.
+
+This can also be framed as "average mercenary hash power stolen given a fixed minting rate threshold" rather than "minting rate threshold given that mercenary hash power stays on chain 2 for all trials"
+
+[TODO -- figure for clarifying first paragraph of this section ]
+[TODO -- writing of the last part of this section]
+[TODO -- Average merc hash power given a fixed minting rate thresh experiment results.  Modify simulations to have one chain use this protocol.  We'll have to start keeping track of coinbase values too now]
+
 
 \section{Historical Analysis of Data}
 [TODO Arnesh]
