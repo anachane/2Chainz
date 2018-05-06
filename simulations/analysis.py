@@ -348,7 +348,7 @@ def sampleNumReduce(results):
 
             
 if __name__ == "__main__":
-   data = loadResults("results/big-run-0", countProfitMap, meanReduce)
+   data = loadResults("results/big-run-2", countProfitMap, meanReduce)
    analysis = Analysis(0.01, data, "normalized-profit")
    analysis.plotResults()
 
