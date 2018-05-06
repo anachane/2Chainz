@@ -4,8 +4,8 @@ import csv
 
 def plotDataSets(x1, y1, x2, y2, xlabel, ylabel, title, fileName):
     fig, axis = plt.subplots()
-    axis.scatter(x1, y1, c='b', label='chain1')
-    axis.scatter(x2, y2, c='r', label='chain2')
+    axis.plot(x1, y1, c='b', label='chain1')
+    axis.plot(x2, y2, c='r', label='chain2')
     plt.legend(loc='upper left')
     axis.set_xlabel(xlabel)
     axis.set_ylabel(ylabel)
@@ -105,11 +105,9 @@ def traverseData(fileName, params):
                 ch2.beta = 1 - alpha - beta1
                 ch2.tokenValue = 1.0
 
-                # plot hashpower over blocks
+                # plot hashpower and difficulty over blocks
                 plotHashBlocks(ch1, ch2)
                 plotDiffBlocks(ch1, ch2)
-                plotHashTime(ch1, ch2)
-                plotDiffTime(ch1, ch2)
                 return
 
 
