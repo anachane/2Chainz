@@ -19,11 +19,12 @@ hPerSecond = 1000000000
 #     3. Blocks mined during the period
 #     4. Time it took for the chain to complete this period
 class Period:
-    def __init__(self, hashRate, diff, time, blocks):
+    def __init__(self, hashRate, diff, time, blocks, totalTime=0):
         self.hashRate = hashRate
         self.diff = diff
         self.timeSinceAdj = time
         self.blocks = blocks
+        self.totalTime = totalTime
         return
 
 # A Chain contains all of the information needed to specify a blockchain for
@@ -32,12 +33,13 @@ class Period:
 #     2. The periods in the chain's history
 #     3. A function to draw the next time it takes to mine a difficulty epoch
 class Chain:
-    def __init__(self, alpha, beta, targetTime, blockNum, hashRate, tokenValue):
+    def __init__(self, alpha, beta, targetTime, blockNum, hashRate, tokenValue, isBCH):
         # system parameters
         self.alpha = alpha
         self.beta = beta
         self.blockNum = blockNum
         self.tokenValue = tokenValue
+        self.isBCH = isBCH
 
         # current state of chain
         self.timeSinceAdj = 0.0
@@ -45,6 +47,7 @@ class Chain:
         self.lastPuzzleTime = 0.0
         self.blocks = 0
         self.hashRate = hashRate
+        self.initHashRate = hashRate
         self.targetTime = targetTime
         self.diff = targetTime * hPerSecond * (1 / max_ratio) * hashRate # init assuming steady state
 
@@ -56,15 +59,61 @@ class Chain:
     # Update the state of the chain to account for the specified period of
     # blocks being mined
     def periodMined(self):
-        self.periods.append(Period(self.hashRate, self.diff, self.timeThisPeriod, self.blocks))
+        self.periods.append(Period(self.hashRate, self.diff, self.timeThisPeriod, self.blocks, self.periods[-1].totalTime + self.timeThisPeriod))
         self.lastPuzzleTime = 0.0
         return
 
     # Update the current difficulty of the chain
-    def updateDifficulty(self):
+    def getInitialDiff(self):
+        return self.targetTime * hPerSecond * (1 / max_ratio) * self.initHashRate
+
+    # Update the current difficulty of the chain
+    def updateDifficultyBTC(self):
         self.diffPeriods += 1
-        self.diff = (self.diff * self.targetTime * self.blockNum) / self.timeSinceAdj
+        newDiff = (self.diff * self.targetTime ) / self.timeSinceAdj
+        if newDiff > self.diff * 4.0:
+            self.diff = self.diff * 4.0
+        elif newDiff < self.diff / 4.0:
+            self.diff = self.diff / 4.0
+        else:
+            self.diff = newDiff
         return
+
+    def updateDifficultyBCH(self):
+        self.diffPeriods += 1
+        if len(self.periods) >= 146:
+            b_last = self.periods[-2].diff
+            b_first = self.periods[-145].diff
+            ts = self.periods[-2].totalTime - self.periods[-145].totalTime
+        elif len(self.periods) >= 2:
+            num_blocks = len(self.periods)
+            b_last = self.periods[-2].diff
+            b_first = self.getInitialDiff()
+            ts = self.periods[-2].totalTime + self.targetTime*(144-num_blocks)
+        else:
+            b_last = self.getInitialDiff()
+            b_first = self.getInitialDiff()
+            ts = self.targetTime*144
+
+        ts = int(ts)
+        ts = min(ts, 288*self.targetTime)
+        ts = max(72*self.targetTime, ts)
+        chainwork1 = 2**224/b_last
+        chainwork2 = 2**224/b_first
+        w = chainwork1 - chainwork2
+        pw = w * self.targetTime / ts
+
+        if pw == 0:
+            self.diff = 1
+        else:
+            target = min((2**256 - pw) / pw, 2**224)
+            self.diff = max(1, 2**224*pw/(2**256 - pw))
+
+    def updateDifficulty(self):
+        if self.isBCH:
+            self.updateDifficultyBCH()
+        else:
+            self.updateDifficultyBTC()
 
     # Update the state of the chain to account for a new allocation of hash
     # power
@@ -92,6 +141,9 @@ def gDecision(chain1, chain2):
     alpha = chain1.alpha
     prev_diff1 = chain1.periods[-1].diff
     prev_diff2 = chain2.periods[-1].diff
+
+    if prev_diff2 == 0:
+        print chain2.periods[-1].blocks
 
     rate1 = chain1.tokenValue / prev_diff1
     rate2 = chain2.tokenValue / prev_diff2
@@ -156,12 +208,13 @@ class Simulation:
             beta1Map = {}
             alphaMap[alpha] = beta1Map
             beta1 = 0
-            while beta1 < 1 - alpha:
+            while beta1 + self.stepSize < 1 - alpha:
                 beta1 = beta1 + self.stepSize
                 print("beta1: " +str(beta1))
                 priceMap = {}
                 beta1Map[beta1] = priceMap
                 beta2 = (1 - alpha) - beta1
+                print 'beta2: ' + str(beta2)
                 priceFrac = 0 # f2/f1
                 f2 = 1 # setting this for simulation simplicity
                 while int(priceFrac) < 1:
@@ -170,7 +223,7 @@ class Simulation:
                     results = []
                     f1 = f2 / priceFrac
                     for i in range(self.runsPerStep):
-                        ch1, ch2 = self.runOne(beta1, beta2, alpha, f1, f2, gDecision)
+                        ch1, ch2 = self.runOne(beta1, beta2, alpha, f1, f2, gDecision, False, True)
                         results.append(mapFun(ch1, ch2))
                     priceMap[priceFrac] = reduceFun(results)
         return alphaMap
@@ -179,11 +232,14 @@ class Simulation:
     # adjustment periods, returning the two Chains and associated data for
     # processing.  It is parameterized by a decision function and can
     # therefore be used to simulate different switching-miner strategies
-    def runOne(self, beta1, beta2, alpha, f1, f2, decisionFun):
+    def runOne(self, beta1, beta2, alpha, f1, f2, decisionFun, ch1IsBch, ch2IsBch):
         # We constrain the problem a bit to simplify things:
         #  alpha always starts out on chain 1
-        chain1 = Chain(alpha, beta1, 600, 2016, beta1 + alpha, f1)
-        chain2 = Chain(alpha, beta2, 600, 2016, beta2, f2)
+        targetTime = 600
+        ch1BlockNum = 1 if ch1IsBch else 2016
+        ch2BlockNum = 1 if ch2IsBch else 2016
+        chain1 = Chain(alpha, beta1, targetTime, ch1BlockNum, beta1 + alpha, f1, ch1IsBch)
+        chain2 = Chain(alpha, beta2, targetTime, ch2BlockNum, beta2, f2, ch2IsBch)
         # Each loop run adds a period to each chain
         # Difficulty adjustments and periods are not 1-1 so i is not updated
         #  in every loop
@@ -298,7 +354,11 @@ def saveResults(resultMap):
 
 # Run from cli
 if __name__ == "__main__":
-    sim = Simulation(100)
+    from sys import argv
+    print 'initializing'
+    sim = Simulation(int(argv[1]))
+    print 'starting simulation with ' + argv[1] + ' adjustment periods'
     resultMap = sim.runGreedy(countOscMap, meanReduce)
+    print 'saving results'
     saveResults(resultMap)
     sim.plotResults(resultMap)
