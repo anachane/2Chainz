@@ -19,16 +19,14 @@
 
 
 \begin{tabular}{lr}
-Email: & wdaviau@protocol.ai \\
-CUNet ID: & wtd37 \\
-Name: & Wyatt Daviau \\
-Date: & March 25th 2018 \\
+Authors: & Wyatt Daviau, Arnesh Nagavalli, Ahaan Nachane \\
+Date: & May 14 2018 \\
 \end{tabular}
 \end{center}
 
 
 \section{Abstract}
-We model the scenario where two blockchains have the same proof of work hash function and therefore miners can switch among chains at will.  We devise a principled simple strategy for choosing among competing blockchains that miners can follow.  We demonstrate that this strategy is profitable throughout a large region of the considered parameter space and classify different regions of the parameter space based on the behavior of miners following this profitable strategy.  We present an analysis of historical BTC / BCH data in light of our 
+In a world with many different cryptocurrency protocols and competing chains, miners desire to mine on chains where they can receive the most reward for the least work. Our goal is to quantify and understand this desire. To that end, we model the scenario where two blockchains have the same proof of work hash function and therefore miners can switch among chains at will.  We devise a principled simple strategy for choosing among competing blockchains that miners can follow.  We demonstrate that this strategy is profitable throughout a large region of the considered parameter space and classify different regions of the parameter space based on the behavior of miners following this profitable strategy.  We present an analysis of historical BTC / BCH data in light of our 
 
 Furthermore we investigate what an optimal switching strategy would look like if miners can make reasonable predictions about the future.  We also propose a candidate strategy for a blockchain designed to compete with an existing chain for hash power without flooding the market for its native token by minting coins at an excessive rate.
 
@@ -39,18 +37,15 @@ The goal of our analysis is to study the scenario in which miners are willing to
 
 [Ahaan discussion of further optimal algorithms or optimality of greedy mercenary]
 
-We model the system consisting of two chains both running BTC's difficulty adjustment protocol but sweeping different reward fractions, "loyal" hashrates and mercenary hashrate.  Based on our model we introduce a simple visualization for the stability characteristics of different points in the parameter space and an associated prediction function determining whether a point in the parameter space will be unstable. We built simple simulation and analysis frameworks for generating and interpreting data representing execution of these systems in the presence of mercenary miners following the greedy strategy.  Leveraging these frameworks we present a view into the different stability regions of the parameter space and reach the conclusion that the greedy mercenary mining strategy is profitable throughout a wide section of the parameter space.  We confirm our theoretical prediction of the instability region concluding that in the BTC / BTC difficulty adjustment case the region of instability in the parameter space is significant and  [impacts the transaction throughput of both systems TODO analysis function and figure quantifying this]. 
+We model the system consisting of two chains both running BTC's difficulty adjustment protocol but sweeping different reward fractions, "loyal" hashrates and mercenary hashrate.  Based on our model we introduce a simple visualization for the stability characteristics of different points in the parameter space and an associated prediction function determining whether a point in the parameter space will be unstable. We built simple simulation and analysis frameworks for generating and interpreting data representing execution of these systems in the presence of mercenary miners following the greedy strategy.  Leveraging these frameworks we present a view into the different stability regions of the parameter space and reach the conclusion that the greedy mercenary mining strategy is profitable throughout a wide section of the parameter space.  We confirm our theoretical prediction of the instability region concluding that in the BTC / BTC difficulty adjustment case the region of instability in the parameter space is significant. Since the amount of oscillation between chains for a given parameter set is probabilistic (based on the time it takes a chain to produce a block), the regions of the parameter space can only be described up to a given confidence threshold. 
 
-[ Arnesh + Wyatt TODO BCH / BTC, BCH / BCH simulation results would be a great addition to this paper and seems within reach with one week remaining ] 
-
-[ Arnesh + Ahaan analysis of historical data sets, maybe this should be skipped as DARI is already plotted by fork.lol? ]
-
+Finally, we take one step forward in relaxing our model's assumptions by allowing the difficulty adjustment algorithm to differ between chains. This allows us to simulate competition between chains with slightly different protocols, for example Bitcoin and Bitcoin Cash. As these two protocols share the same proof of work system, real world miners are able to hop between these two chains in order to maximize personal profit.
 
 \section{Model and Assumptions}
 We make many simplifying assumptions when modeling this system.  The goal is to make enough assumptions to keep analysis tractable while at the same time parameterizing the problem in a way that gives insight to real systems of competing blockchains, and paves the way for more advanced modeling.  The following are global system assumptions 
 \begin{enumerate}
 \item
-There are two chains in the system, chain 1 and chain 2.  Both chains use the same proof of work and difficulty adjustment algorithm as the Bitcoin protocol [TODO when BCH difficulty is added in this will change]
+There are two chains in the system, chain 1 and chain 2.  Both chains use the same proof of work and difficulty adjustment algorithm as the Bitcoin protocol. Later, we allow the difficulty adjustment algorithm to follow either the Bitcoin or Bitcoin Cash protocol.
 \item
 Each chain rewards miners with a coinbase transaction that pays out tokens to the miner that solves the block puzzle.  Additionally miners are rewarded by the transaction fees tied to the transactions serialized in the blocks.  We assume that the value of the total reward (in, say USD) of chain 1 is a constant $f_1$ and the value of the token of chain 2 is a constant $f_2$.  We do not account for variations in transaction fees or reductions in the coinbase payout in this analysis.  Only the ratio of these two parameters $\frac{f1}{f2}$ is relevant in our analysis.
 \item
@@ -62,7 +57,9 @@ We assume a fraction $\alpha$ of the hash power, from here on out called the mer
 \item
 $\beta_1$ and $\beta_2$ corresponding to miners who are loyal to chains 1 and 2 respectively.  These hashpower fractions do not move from their respective chains regardless of the profitability of switching.  We need not consider the hash power of $\beta_i$ as belonging to a single pool.
 \item
-The difficulty of each chain is adjusted every $b$ blocks.  The time it takes for $b$ blocks to be mined in epoch $i$ = $\Delta_i$.  To calculate the difficulty adjustment the protocol specifies that: $d_{i+1} = \frac{ d_i \cdot b \cdot t_{\text{target}} }{ \Delta_i}$, as in bitcoin.  The target is 600s.
+In the BTC difficulty adjustment algorithm, the difficulty of the chain is adjusted every $b$ blocks.  The time it takes for $b$ blocks to be mined in epoch $i$ = $\Delta_i$.  To calculate the difficulty adjustment the protocol specifies that: $d_{i+1} = \frac{ d_i \cdot b \cdot t_{\text{target}} }{ \Delta_i}$, as in bitcoin.  The target is 600s.
+\item 
+In the BCH difficulty adjustment algorithm, the difficulty of the chain is adjusted every block. If the block that was just mined is $b_n$, let $b_{last} = b_{n-1}$ and let $b_{n-144}$. Let $W$ be the difference in chainwork (the sum of targets) between $b_{last}$ and $b_{first}$. Let $T$ be the difference in time between $b_{last}$ and $b_{first}$. Let $W_{projected} = \frac{W \cdot t_{\text{target}} }{T}$. The protocol then specifies that the new difficulty $d_{n+1} = \frac{ W_{projected} \cdot 2^{256} }{ 2^{256} - W_{projected} }$
 
 \item
 We assume the system begins in a steady state where the difficulty of each chain reflects the initial allocation of the hash power.  The mercenary miners begin by mining on chain 1.  Throughout the analysis chain 1 is given the asymetric advantage that $\frac{f1}{f2} \leq 1$
@@ -70,7 +67,7 @@ We assume the system begins in a steady state where the difficulty of each chain
 
 \subsection{Calculating the initial difficulty}
 
-From assumption (8) above we can calculate the initial difficulty, which is an initial condition needed by the simulation framework.  We include the derivation here because the discussion is relevant for the subsequent derivation of the switching criterion for the greedy mining strategy.  
+From assumption (9) above we can calculate the initial difficulty, which is an initial condition needed by the simulation framework.  We include the derivation here because the discussion is relevant for the subsequent derivation of the switching criterion for the greedy mining strategy.  
 
 The following discussion applies to both chains and examines chain 1 without loss of generality.  By our steady state assumption that the mining epoch before the period of history in which our analysis takes place lasted exactly $(600 s)(b)$.  The number of hashes tried until a block is successfully mined follows a geometric distribution and by the properties of this distribution the inverse of the probability of one success is equal to the mean number of hashes until success.  Given our steady state condition and initial allocation we have the following relation
 $$
@@ -192,8 +189,6 @@ The simulation framework generates a blockchain history from input parameters $\
 We broke our parameter space into 3 standard degrees of freedom: $\alpha$, $\beta_1$, and $\frac{f2}{f1}$.  We swept price fractions and $\beta$ values at precision of 0.01 and ran each such sweep with alpha values of 0.01, 0.05, 0.1, 0.2, 0.3.  We began by running 5 trials for each point and running for 100 difficulty adjustments.  Datasets are persisted to disk as csv files and each such sweep generates about 3 GB of data.
 
  We performed a simple statistical analysis on the mean and standard deviations of the oscillation count data set to measure how much greater a sample size we should take to increase our confidence in the results.  The test showed that apart from a small subset of points well understood to be highly variant, 5 trials was more than enough to be 90\% confident in our samples.  Furthermore only 5 more trials would be sufficient to get to 90\% confidence in the small subset of high variance points.
-
-[TODO not necessary but we could potentially justify far fewer difficulty adjustment periods to get meaningful data (expected profit, oscillations / hash power residency).  This would take some initial work but would result in much faster and probably more principled simulations.  Initial work would center around plotting out individual runs and looking for convergence patterns.  Alternatively coming up with a map function measuring a meaningful notion of convergence in the parameter space and running a normal plot job.  I am confident 100 runs is well past convergence, and also a little much given that it is 2 years of acutal time ]
 
 \subsubsection{Analysis Framework}
 We wrote a data processing and plotting script that leverages a simple map reduce framework to easily compose operations and make generation of plots easy to reason about.  We built a simple map reduce framework: the map function processes the data of a single trial's history and the reduce function aggregates together all of the values of all trials occurring at the same point in the parameter space.  The plots generated are of the entire parameter space sweep.  Each plot represents one value of $\alpha$, i.e. the combined hash rate of all mercenary miners.  The x-axis measures $\beta_1$, the hash rate loyal to the more powerful chain 1, and the y-axis measures the fraction $\frac{f2}{f1}$ between the values of 0 and 1.
@@ -342,11 +337,26 @@ This can also be framed as "average mercenary hash power stolen given a fixed mi
 
 [TODO -- figure for clarifying first paragraph of this section ]
 [TODO -- writing of the last part of this section]
-[TODO -- Average merc hash power given a fixed minting rate thresh experiment results.  Modify simulations to have one chain use this protocol.  We'll have to start keeping track of coinbase values too now]
 
 
-\section{Historical Analysis of Data}
-[TODO Arnesh]
+\section{Historical Analysis}
+While conducting our investigation, we discovered that the greedy decision rule we implemented into our model is in fact what many miners use to decide on which chain to mine on. In the real mining world, there is the concept of the Difficulty Adjusted Reward Index (DARI) which is simply the coinbase reward (adjusted to an intermediate traditional currency) divided by the current difficulty on the chain.
+
+As we can see from the real world data shown in Figure 6, the DARI ratio between BTC and BCH oscillates about the line ratio = 1.0. The frequency of this oscillation thus implies that mercenary miners do, in actuality, pay attention to this ratio and shift their mining power between chains to maximize profitability. Since BTC and BCH use the same proof of work schema, this switching is valuable.
+
+\begin{figure}
+	\centering
+	\subfigure[Multi-chain DARI over time]{
+		\includegraphics[width=0.25\linewidth]{figures/dari_chart.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[BTC/BCH DARI ratio]{
+		\includegraphics[width=0.25\linewidth]{figures/dari_ratio.png}
+		\label{fig:theo}
+		}
+	\caption{(a) Plot of BTC and BCH DARI over time (timeframe = 1 month).[2] (b) Plot of the BTC/BCH DARI ratio. If the ratio is greater than 1, then BTC is more profitable and vice versa.[2]}
+\end{figure}
 
 
 %The next switching point is influenced by the miner's choice of which chain to mine on.  Call 
