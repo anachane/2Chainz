@@ -98,15 +98,20 @@ class Chain:
         ts = int(ts)
         ts = min(ts, 288*self.targetTime)
         ts = max(72*self.targetTime, ts)
-        chainwork1 = 2**224/b_last
-        chainwork2 = 2**224/b_first
-        w = chainwork1 - chainwork2
+        chainwork = 0
+        for i in range(1, 145):
+            if i <= len(self.periods):
+                blockproof = 2**256/((2**224/self.periods[-i].diff) + 1)
+            else:
+                blockproof = 2**256/((2**224/self.getInitialDiff()) + 1)
+            chainwork += blockproof
+
+        w = chainwork
         pw = w * self.targetTime / ts
 
         if pw == 0:
             self.diff = 1
         else:
-            target = min((2**256 - pw) / pw, 2**224)
             self.diff = max(1, 2**224*pw/(2**256 - pw))
 
     def updateDifficulty(self):
