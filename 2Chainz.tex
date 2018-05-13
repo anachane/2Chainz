@@ -201,7 +201,6 @@ We wrote a data processing and plotting script that leverages a simple map reduc
 [TODO plots of individual runs.  This is a precursor for the previous TODO.  It is not necessary but might help present results + is necessary for reducing the number of difficulty adjustments in simulations in a principled way.  Also this is a pretty simple endeavor ~2 hours and it could shave lots and lots of time from simulations this week]
 \subsection{Results}
 Figure 2 shows the mean number of oscillations across all trials at each point swept for the simulated model.  The results are close to those predicted in Figure 1, but the oscillation regions extend past the predicted boundaries due to the element of randomness complicating the true ordering of profit rates between chains discussed in 5.0.2.  As the hash power of mercenary miners increases, a larger region of the parameter space is unstable.
-[TODO -- axes labeled right, perhaps nicer font and sizing for axes.  Title could be formatted better too but not essential]
 \begin{figure}
 	\centering
 	\subfigure[$\alpha=0.01$]{
@@ -231,7 +230,6 @@ Figure 2 shows the mean number of oscillations across all trials at each point s
 	\caption{Mean number of oscillations over 100 difficulty adjustment periods.  One oscillation occurs when the mercenary hash power switches between chains once.}
 \end{figure}
 
-[TODO -- remove the scale on the right from all, and fix axes]
 Figure 3 marks in green regions where no oscillations occur in all trials (region 1), in red regions where only one oscillation from chain 1 to chain 2 occurs in all trials (region 2), and in blue regions where more than one oscillation occurs in at least one trial (region 3)
 \begin{figure}
 	\centering
@@ -259,13 +257,13 @@ Figure 3 marks in green regions where no oscillations occur in all trials (regio
 		\includegraphics[width=0.25\linewidth]{simulations/resources/osc-region-alpha=0-3.png}
 		\label{fig:theo}
 		}		
-	\caption{Different stability regions.  Chain 1 dominates in region 1 in green.  Chain 2 dominates in region 3 in red, oscillations occur in blue.  As alpha increases the region of instability consumes most of the parameter space.}
+	\caption{Different stability regions.  Chain 1 dominates in region 1 in green.  Chain 2 dominates in region 3 in red, oscillations occur in blue.  As $\alpha$ increases the region of instability consumes most of the parameter space.}
 \end{figure}
 
-[TODO -- fix axes]
+
 Figure 4 shows the average expected profit of a mercenary following the greedy strategy taken over the simulation trials normalized by the expected profit if the mercenary hashrate had stayed on chain 1.  It is calculated by adding up $b_i \cdot \frac{\alpha}{\alpha + \beta_j} \cdot f_j$ for both chains $j=1,2$ for all periods $i$ where the mercenary hash rate is resident on that chain.  The profit is then normalized by dividing by the expected profit the mercenary miners would make if they had stayed on chain 1 over the same period of time.  
 
-Note that the normalized profit is higher for smaller values of $\alpha$.  This can be explained intuitively by recognizing that when mercenary miners make up a smaller fraction of the total hash power of the system, their total fraction of power on chain 2 is relatively greater than their total fraction of power on chain 1.  Alternatively consider the power ratios on both chains
+Note that the normalized profit is higher for smaller values of $\alpha$.  This can be explained intuitively by recognizing that when mercenary miners make up a smaller fraction of the total hash power of the system, their total fraction of power on chain 2 is relatively greater than their total fraction of power on chain 1.  More precisely consider the power ratios on both chains
 $$
 \frac{ \frac{\alpha}{\alpha + \beta_2}}{\frac{\alpha}{\alpha + \beta_1}} = \frac{\alpha + \beta_1}{\alpha + \beta_2}\\ 
 $$
@@ -301,24 +299,71 @@ When $\alpha, \beta_2 << \beta_1$ $\frac{\alpha + \beta_1}{\alpha + \beta_2} \ap
 	\caption{Normalized profitability of the greedy mercenary strategy.  This strategy is profitable throughout regions 2 and 3, and is relatively highest when chain 2's reward is relatively high and chain 2's loyal hash rate is relatively low.  Low total mercenary mining hash rate pays out relatively more than higher hash rates.}
 \end{figure}
 
-Figure 5 compares average time per block.  In general the lengthened block times of chains that have had their difficulty adjusted for but are then abandoned by mercenary miners outweigh the shortened block times in periods where the difficulty is not adjusted for mercenary miners.  This effect is visible in region 2.  As $\alpha$ increases the disruption in availability becomes more sever.
+Figure 5 shows the portion of simulated time that mercenary miners spend on chain 2.  The value plotted is therefore proportional to the hashpower gains of chain 2 in the presence of mercenary miners.  As parameters shift from region 1 to region 2 throughout the oscillation region more hashpower is drawn to chain 2 on average.
 \begin{figure}
 	\centering
 	\subfigure[$\alpha=0.01$]{
-		\includegraphics[width=0.25\linewidth]{simulations/resources/time-per-block-ch1-alpha=0-1.png}
+		\includegraphics[width=0.25\linewidth]{simulations/resources/mercenary-time-frac-ch2-alpha=0-01.png}
 		\label{fig:theo}
 		}
 	\qquad
 	\subfigure[$\alpha=0.05$]{
-		\includegraphics[width=0.25\linewidth]{simulations/resources/time-per-block-ch1-alpha=0-2.png}
+		\includegraphics[width=0.25\linewidth]{simulations/resources/mercenary-time-frac-ch2-alpha=0-05.png}
 		\label{fig:theo}
 		}
 	\qquad
 	\subfigure[$\alpha=0.1$]{
+		\includegraphics[width=0.25\linewidth]{simulations/resources/mercenary-time-frac-ch2-alpha=0-1.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.2$]{
+		\includegraphics[width=0.25\linewidth]{simulations/resources/mercenary-time-frac-ch2-alpha=0-2.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.3$]{
+		\includegraphics[width=0.25\linewidth]{simulations/resources/mercenary-time-frac-ch2-alpha=0-3.png}
+		\label{fig:theo}
+		}		
+	\caption{Fraction of simulated time mercenaries mine on chian 2.  This value is proportional to the hashpower gains chain 2 receives with mercenary miners present.}
+\end{figure}
+
+
+
+Figure 6 compares average time per block on both chains.  In general the lengthened block times of chains that have had their difficulty adjusted for but are then abandoned by mercenary miners outweigh the shortened block times in periods where the difficulty is not adjusted for mercenary miners.  This effect is visible in region 2.  As $\alpha$ increases the disruption in availability becomes more severe.  Chain 1 sees far less disruption than chain 2, which sees average block times of almost 10x for large values of $\alpha$.  The parameter region in which chain 1 is so severely disrupted is confined to systems with low $\beta_2$ and low relative rewards to chain 2 miners, e.g. when chain 2 is the most susceptible to dying out.
+\begin{figure}
+	\centering
+	\subfigure[$\alpha=0.1$, chain 1]{
+		\includegraphics[width=0.25\linewidth]{simulations/resources/time-per-block-ch1-alpha=0-1.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.2$, chain 1]{
+		\includegraphics[width=0.25\linewidth]{simulations/resources/time-per-block-ch1-alpha=0-2.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.3$, chain 1]{
 		\includegraphics[width=0.25\linewidth]{simulations/resources/time-per-block-ch1-alpha=0-3.png}
 		\label{fig:theo}
 		}	
-	\caption{Average block time.  Oscillations in mercenary hash power between chains on the whole decrease availability of the chains' transaction processing by slowing down block times on average.  The problem becomes more severe for higher $\alpha$}
+	\qquad
+	\subfigure[$\alpha=0.05$, chain 2] {
+		\includegraphics[width=0.25\linewidth]{simulations/resources/time-per-block-ch2-alpha=0-05.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.1$, chain 2]{
+		\includegraphics[width=0.25\linewidth]{simulations/resources/time-per-block-ch2-alpha=0-1.png}
+		\label{fig:theo}
+		}
+	\qquad
+	\subfigure[$\alpha=0.2$, chain 2]{
+		\includegraphics[width=0.25\linewidth]{simulations/resources/time-per-block-ch2-alpha=0-2.png}
+		\label{fig:theo}
+		}	
+	\caption{Average block time.  Oscillations in mercenary hash power between chains on the whole decrease availability of the chains' transaction processing by slowing down block times on average.  The problem becomes more severe for higher $\alpha$}.  The less advantaged chain sees more severe disruptions in availability
 \end{figure}
 
 
