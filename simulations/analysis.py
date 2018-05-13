@@ -226,6 +226,27 @@ def timePerBlockCh1Map(ch1, ch2):
             alreadyMined = 0    
     return fT / totalBlocks
 
+def timePerBlockCh2Map(ch1, ch2):
+    fT = finishTimeMap(ch1, ch2)
+    totalBlocks = 0
+    alreadyMined = 0
+    for period in ch2.periods:
+        totalBlocks += int(period.blocks) - alreadyMined
+        alreadyMined = int(period.blocks)
+        if alreadyMined == 2016:
+            alreadyMined = 0    
+    return fT / totalBlocks
+
+
+def timeWithMercHPCh2Map(ch1, ch2):
+    fT = finishTimeMap(ch1, ch2)
+    totalHPTime = 0
+    for period in ch2.periods:
+        if float(period.hashRate) > ch2.beta + 0.001:
+            totalHPTime += float(period.timeSinceAdj)
+    return totalHPTime / fT
+
+
 def totalBlocks(ch1, ch2):
     blocks1 = 0
     for period in ch1.periods:
@@ -357,8 +378,8 @@ def sampleNumReduce(results):
 
             
 if __name__ == "__main__":
-   data = loadResults("results/big-run-2", countProfitMap, meanReduce)
-   title = "Normalized Profit"
-   path = "gen-resources/normalized-profit"
+   data = loadResults("results/big-run-1", timeWithMercHPCh2Map, meanReduce)
+   title = "Mean Ratio Mercenary Time on Chain 2"
+   path = "gen-resources/mercenary-time-frac-ch2"
    analysis = Analysis(0.01, data, path, title)
    analysis.plotResults()
