@@ -262,8 +262,15 @@ Figure 3 marks in green regions where no oscillations occur in all trials (regio
 	\caption{Different stability regions.  Chain 1 dominates in region 1 in green.  Chain 2 dominates in region 3 in red, oscillations occur in blue.  As alpha increases the region of instability consumes most of the parameter space.}
 \end{figure}
 
-[TODO -- fix axes, try to understand tragedy of the commons a little better ]
-Figure 4 shows the average expected profit of a mercenary following the greedy strategy taken over the simulation trials normalized by the expected profit if the mercenary hashrate had stayed on chain 1.  It is calculated by adding up $b_i \cdot \frac{\alpha}{\alpha + \beta_j} \cdot f_j$ for both chains $j=1,2$ for all periods $i$ where the mercenary hash rate is resident on that chain.
+[TODO -- fix axes]
+Figure 4 shows the average expected profit of a mercenary following the greedy strategy taken over the simulation trials normalized by the expected profit if the mercenary hashrate had stayed on chain 1.  It is calculated by adding up $b_i \cdot \frac{\alpha}{\alpha + \beta_j} \cdot f_j$ for both chains $j=1,2$ for all periods $i$ where the mercenary hash rate is resident on that chain.  The profit is then normalized by dividing by the expected profit the mercenary miners would make if they had stayed on chain 1 over the same period of time.  
+
+Note that the normalized profit is higher for smaller values of $\alpha$.  This can be explained intuitively by recognizing that when mercenary miners make up a smaller fraction of the total hash power of the system, their total fraction of power on chain 2 is relatively greater than their total fraction of power on chain 1.  Alternatively consider the power ratios on both chains
+$$
+\frac{ \frac{\alpha}{\alpha + \beta_2}}{\frac{\alpha}{\alpha + \beta_1}} = \frac{\alpha + \beta_1}{\alpha + \beta_2}\\ 
+$$
+
+When $\alpha, \beta_2 << \beta_1$ $\frac{\alpha + \beta_1}{\alpha + \beta_2} \approx \frac{\beta_1}{\beta_2}$.  When $\alpha \approx \beta_1$ $\frac{\alpha + \beta_1}{\alpha + \beta_2} \approx 1$   When $\beta_2 << \beta_1$, in the top right corner of the parameter space, the magnifying effect of small $\alpha$ values is most apparent.
 
 \begin{figure}
 	\centering
@@ -291,7 +298,7 @@ Figure 4 shows the average expected profit of a mercenary following the greedy s
 		\includegraphics[width=0.25\linewidth]{simulations/resources/normalized-profit-alpha=0-3.png}
 		\label{fig:theo}
 		}		
-	\caption{Normalized profitability of the greedy mercenary strategy.  This strategy is profitable throughout regions 2 and 3, and is relatively highest when chain 2's reward is relatively high and chain 2's loyal hash rate is relatively low.  There is a tragedy of the commons where low total mercenary mining hash rate pays out relatively more than higher hash rates.}
+	\caption{Normalized profitability of the greedy mercenary strategy.  This strategy is profitable throughout regions 2 and 3, and is relatively highest when chain 2's reward is relatively high and chain 2's loyal hash rate is relatively low.  Low total mercenary mining hash rate pays out relatively more than higher hash rates.}
 \end{figure}
 
 Figure 5 compares average time per block.  In general the lengthened block times of chains that have had their difficulty adjusted for but are then abandoned by mercenary miners outweigh the shortened block times in periods where the difficulty is not adjusted for mercenary miners.  This effect is visible in region 2.  As $\alpha$ increases the disruption in availability becomes more sever.
