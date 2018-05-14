@@ -124,7 +124,6 @@ A key observation regarding the profit rate is that while changes in the block r
 After deriving our simple greedy strategy independently, it turns out that our algorithm is apparently used by real-life mercenary miners, or as they are sometimes called "chain-hoppers".  Our switching criterion is known as the Difficulty Adjustment Reward Index by miners in the BCH community and is tracked by at least one BCH analytics site [2].
 
 \subsubsection{Theoretical Analysis}
-[TODO -- Figure one needs axes revamp (0 to 1 not 100) and should be taken over a finer grained step sizes to get smoother plots.  Also we should get rid of pplot for this graph]
 \begin{figure}
 	\centering
 	\subfigure[$\alpha=0.01$]{
@@ -147,6 +146,7 @@ After deriving our simple greedy strategy independently, it turns out that our a
 		\label{fig:theo}
 		}		
 	\caption{Orderings over different regions of parameter space. Index -- Red: (1), Orange: (2), Cyan: (3), Yellow: (4), Blue: (6).  Ordering (5) is not possible in the subset of configurations we considered}
+\label{fig:osc-predict}
 \end{figure}
 
 Given the mechanism of the greedy mercenary mining strategy and the properties of the protocol difficulty, one useful characterization of a two chain system is the ordering of the four values: 
@@ -155,7 +155,7 @@ $$
 $$
 In a rough sense the value $\frac{f_j}{\alpha + \beta_j}$ can be thought of as the least profitable expected profit rate and $\frac{f_j}{\beta_j}$ the most profitable expected profit rate on chain $j$.  This is because the difficulty is distributed about a mean proportional to the average hash rate on the previous interval and the greatest and least possible such average hash rates are $\alpha + \beta_j$ and $\beta_j$ respectively.  The proportionality constants are ignored here because they are identical across each ratio and don't affect the ordering.  
 
-Due to the constraints $\frac{f_j}{\alpha + \beta_j} < \frac{f_j}{\beta_j}$, there are 6 possible orderings of these values: [TODO -- make this look less complicated by assigning visualizations to each of the four values as done in written examples.  Also putting on the number line might be nice]
+Due to the constraints $\frac{f_j}{\alpha + \beta_j} < \frac{f_j}{\beta_j}$, there are 6 possible orderings of these values: 
 \begin{enumerate}
 \item
 $\frac{f_2}{\alpha + \beta_2} < \frac{f_2}{\beta_2} < \frac{f_1}{\alpha + \beta_1} < \frac{f_1}{\beta_1}$
@@ -171,15 +171,91 @@ $\frac{f_1}{\alpha + \beta_1} <  \frac{f_2}{\alpha + \beta_2} < \frac{f_2}{\beta
 $ \frac{f_2}{\alpha + \beta_2} <  \frac{f_1}{\alpha + \beta_1} < \frac{f_1}{\beta_1}  < \frac{f_2}{\beta_2} $
 \end{enumerate}
 
+\begin{figure}
+\begin{tikzpicture}[scale=1]
+\draw[-][very thick] (0,0) -- (0,5);
+\draw[-] [thick] (-0.1, 1) -- (0.1,1);
+\node[right] at (-1.25, 1) {$\frac{f_2}{\alpha + \beta_2}$ };
+\draw[-] [thick] (-0.1, 2.5) -- (0.1,2.5);
+\node[right] at (-1.25, 2.5) { $\frac{f_1}{\alpha + \beta_1}$};
+\draw[-] [thick] (-0.1, 4) -- (0.1,4);
+\node[right] at (-1.25, 4) {$\frac{f_2}{\beta_2} $ };
+\draw[-] [thick] (-0.1, 4.5) -- (0.1,4.5);
+\node[right] at (-1.25, 4.5) { $ \frac{f_1}{\beta_1}$ };
+\node[below] at (0,-0.1) {a.};
+\node at (0.5, 2.5)  (a1)  {1};
+\draw[->][thick] (0.4, 2.5)  -- (0.1, 2.5);
+\node at (0.5, 4)  (a1)  {2};
+\draw[->][thick] (0.4, 4)  -- (0.1, 4);
+\draw (0, 2.5) circle [radius=0.2];
+
+\draw[-][very thick] (1.5,0) -- (1.5,5);
+%\draw[-] [thick] (1.4, 1) -- (1.6,1);
+%\draw[-] [thick] (1.4, 2.5) -- (1.6,2.5);
+%\draw[-] [thick] (1.4, 4) -- (1.6,4);
+%\draw[-] [thick] (1.4, 4.5) -- (1.6,4.5);
+\node[below] at (1.5,-0.1) {b.};
+\node at (2, 2.5)  (a1)  {1};
+\draw[->][thick] (1.9, 2.5)  -- (1.6, 2.5);
+\node at (2, 4)  (a1)  {2};
+\draw[->][thick] (1.9, 4)  -- (1.6, 4);
+\draw (1.5, 4) circle [radius=0.2];
+
+
+\draw[-][very thick] (3,0) -- (3,5);
+\draw[-] [thick] (2.9, 1) -- (3.1,1);
+\draw[-] [thick] (2.9, 2.5) -- (3.1,2.5);
+\draw[-] [thick] (2.9, 4) -- (3.1,4);
+\draw[-] [thick] (2.9, 4.5) -- (3.1,4.5);
+\node[below] at (3,-0.1) {c.};
+\node at (3.5, 2.5)  (a1)  {1};
+\draw[->][thick] (3.4, 2.5)  -- (3.1, 2.5);
+\node at (3.5, 1)  (a1)  {2};
+\draw[->][thick] (3.4, 1)  -- (3.1, 1);
+\draw (3, 2.5) circle [radius=0.2];
+
+
+\draw[-][very thick] (4.5,0) -- (4.5,5);
+%\draw[-] [thick] (4.4, 1) -- (4.6,1);
+%\draw[-] [thick] (4.4, 2.5) -- (4.6,2.5);
+%\draw[-] [thick] (4.4, 4) -- (4.6,4);
+%\draw[-] [thick] (4.4, 4.5) -- (4.6,4.5);
+\node[below] at (4.5,-0.1) {d.};
+\node at (5, 3)  (a1)  {1};
+\draw[->][thick] (4.9, 3)  -- (4.6, 3);
+\node at (5, 1)  (a1)  {2};
+\draw[->][thick] (4.9, 1)  -- (4.6, 1);
+\draw (4.5, 3) circle [radius=0.2];
+
+\draw[-][very thick] (6,0) -- (6,5);
+%\draw[-] [thick] (5.9, 1) -- (6.1,1);
+%\draw[-] [thick] (5.9, 2.5) -- (6.1,2.5);
+%\draw[-] [thick] (5.9, 4) -- (6.1,4);
+%\draw[-] [thick] (5.9, 4.5) -- (6.1,4.5);
+\node[below] at (6,-0.1) {e.};
+\node at (6.5, 3)  (a1)  {1};
+\draw[->][thick] (6.4, 3)  -- (6.1, 3);
+\node at (6.5, 4)  (a1)  {2};
+\draw[->][thick] (6.4, 4)  -- (6.1, 4);
+\draw (6, 4) circle [radius=0.2];
+
+\end{tikzpicture}
+\caption{Visualizing oscillations for ordering (3). Arrows indicate the profit rate mercenaries attain by mining on each chain.  The hollow circle indicates that the mercenaries are mining for the given profit rate and therefore on the corresponding chain.  Mercenaries start mining on chain 1 by initial conditions but move to chain 2 as its profit rate is higher (steps a. and b.).  Mercenary hash power moves back to chain 1 after the difficulty of chain 2 adjusts (step c.).  Chain 1's difficult adjusts between the two extremes because mercenary hash rate was resident for a fraction of a difficult adjustment period (step d.).  Finally chain 2's difficulty adjusts causing mercenaries to shift again (step e.).  As the mercenaries switch between chains their profit rate oscillates between $\frac{f_1}{\alpha + \beta_1}$ and $\frac{f_2}{\beta_2} $.}
+\label{fig:osc-diagram}
+\end{figure}
+
+
 Any point in the parameter space defined by: $(\alpha, \beta_1, \beta_2, f_1, f_2)$ satisfies one of these orderings (or is on the boundary between them in the case of equality).  The ordering assigned to a given system should be an indicator of whether or not hash power oscillations can be expected between chains in this system.  
 
 We do not expect oscillations for systems with orderings (1) or (2).  In these cases one chain's lowest profitability rate is higher than the other chain's highest rate and and no mercenary greedy miner would ever switch to the less profitable chain.  
 
-We expect oscillations in the remaining orderings (3), (4), (5), (6).  Orderings (5) and (6) result in oscillations with a single mode.  In ordering (5) when the difficulty of chain 1 is at its lowest point then mercenaries flock to chain 1, but when the difficulty is at its maximum value they move to chain 2, and symmetrically for ordering (6).  Orderings (3) and (4) are a bit more complex.  Like ordering (5), in ordering (3) when chain 1's difficulty is at its lowest mercenaries move to chain 1.  However mercenaries do not always move to chain 2 when chain 1's difficulty is at its max value, this now depends on the difficulty of chain 2 as well.  Figure 1 plots the ordering corresponding to each point in parameter space, hypothesizing the region of instability. 
+We expect oscillations in the remaining orderings (3), (4), (5), (6).  Orderings (5) and (6) result in oscillations with a single mode.  In ordering (5) when the difficulty of chain 1 is at its lowest point then mercenaries flock to chain 1, but when the difficulty is at its maximum value they move to chain 2, and symmetrically for ordering (6).  Orderings (3) and (4) are a bit more complex.  Like ordering (5), in ordering (3) when chain 1's difficulty is at its lowest mercenaries move to chain 1.  However mercenaries do not always move to chain 2 when chain 1's difficulty is at its max value, this now depends on the difficulty of chain 2 as well.  See Figure 2 for a schematic explaining this in further detail.
 
-Note that there are a few simplifications here.  Most obviously because difficulty tracks with block discovery time which is not deterministic, the values in the orderings do not perfectly correspond to the actual values that will be compared by the mercenary miners during system execution.  In reality the difficulty adjustment alogirthm samples the ordering values in a distribution surrounding the values listed here.  This could lead to different systems in the parameter space displaying different orderings at different difficulty adjustment periods.  For example a system with ordering (2) could have middle points very close such that after a given adjustment $\frac{f_1}{\beta_1} >\frac{f_2}{\alpha + \beta_2}$, giving the system ordering (4).
+Figure 1 plots the ordering corresponding to each point in parameter space, hypothesizing the region of instability. 
 
-Furthermore in the case where miners switch in the middle of one of chain $j$'s adjustment periods due to a profitability adjustment triggered by the other chain, then the average hash rate, and therefore expected difficulty value on chain $j$, in the next period will be between the two extreme values that appear in this ordering.  Again this can change the true ordering of the chain during execution and lead to behavior not predicted by figure 1.  We simulate mining on a two chain system and describe the results in the next section to measure the true oscillation regions that emerge in light of the above two complications.
+Note that there are a few simplifications here.  Most obviously because difficulty tracks with block discovery time which is not deterministic, the values in the orderings do not perfectly correspond to the actual values that will be compared by the mercenary miners during system execution.  In reality the difficulty adjustment alogirthm samples the profit rates in a distribution surrounding the values listed in the orderings above.  This could lead to different systems in the parameter space displaying different orderings at different difficulty adjustment periods.  For example a system with ordering (2) could have middle points very close such that after a given adjustment $\frac{f_1}{\beta_1} >\frac{f_2}{\alpha + \beta_2}$, giving the system ordering (4).
+
+Furthermore consider the case where miners switch in the middle of one of chain $j$'s adjustment periods due to a profitability adjustment triggered by the other chain.  In this case the average hash rate, and therefore expected difficulty value on chain $j$ in the next period will be between the two extreme values that appear in this ordering, see for example step $d.$ in figure 2.  Again this can change the true ordering of the chain during execution and lead to oscillations occurring in regions of the parameter space not predicted by figure 1.  We simulate mining on a two chain system and describe the results in the next section to measure the true oscillation regions that emerge in light of the above two complications.
 
 \section{Simulations}
 To confirm our hypotheses with greater confidence we built a small simulation and analysis framework in under 600 lines of python.  This simulation framework generates and saves data sets recording data for each difficulty adjustment period.  Sweeps are made to record this data throughout the parameter space.  The analysis framework reads data files and applies filters across subsections of data to flexibly generate values suitable for plotting from the raw data.  These techniques provided us with clear visualizations of the profitability and instability of different regions of the parameter space.
@@ -373,14 +449,52 @@ Figure 6 compares average time per block on both chains.  In general the lengthe
 
 
 \section{A Competitive Protocol Leveraging Mercenaries}
-One natural question following this analysis is whether a protocol could use the behavior of mercenary miners to its advantage when in competition with another chain.  This is interesting because new forks of more established protocols, such as the BCH fork of BTC, are often disadvantaged in terms of token exchange rate and total hash power but have the advantage of greater flexibility in defining new protocol rules.  These rules could potentially exploit the incentives of miners in two chain systems to become more advantaged along certain metrics.  Here we consider a simple technique in light of our understanding of the greedy mercenary miner strategy that could be used by such a competing blockchain protocol.  We begin by considering two metrics for which these networks might sensibly want to optimize.
+One natural question following this analysis is whether a protocol could use the behavior of mercenary miners to its advantage when in competition with another chain.  This is interesting because new forks of more established protocols, such as the BCH fork of BTC, are often disadvantaged in terms of token exchange rate and total hash power but have the advantage of greater flexibility in defining new protocol rules.  These rules could potentially exploit the behavior of mercenary miners.  Here we consider a simple technique in light of our understanding of the greedy mercenary miner strategy in our model.  This technique might be useful for such a competing blockchain protocol.  We begin by defining two metrics for which these networks might sensibly want to optimize.
 
-A blockchain network has a vested interest in attracting a large share of the existing hash power applicable to its proof of work operating on its chain.  If hash power from a competing chain can be coordinated against a comparatively weaker chain then 51\% attacks and associated untrustworthy or unavailable transaction processing become a greater risk.  For this reason we consider the fraction of hash power out of the total pool of hash power relevant to the chain's proof of work to be a number that a protocol wishes to maximize.
+A blockchain network has a vested interest in attracting a large share of the existing hash power applicable to its proof of work operating on its chain.  If hash power from a competing chain can be coordinated against a comparatively weaker chain then 51\% attacks and associated untrustworthy or unavailable transaction processing become a greater risk.  For this reason we consider the average fraction of hash power out of the total pool of hash power relevant to the chain's proof of work to be a number that a protocol wishes to maximize.
 
-Furthermore we hypothesize the rate at which a protocol specifies tokens are to be minted is a relevant metric.  The basic thinking is that if more tokens are mined then the markets for these tokens will see a decrease in value and the block reward's value will go down, creating a spiral where hashpower leaves a chain because miners find better profit elsewhere. We are not economists and recognize there is a great deal of complexity that could be explored here, but we'll assume throughout this section that the rate of tokens minted is something that chains would like to keep below some threshold.  The general structure of the technique outlined below should be useful even with a more complex optimization criterion for the minting rate.
+Furthermore we hypothesize the rate at which a protocol mints tokens is a relevant metric.  The basic thinking is that if more tokens are mined then the markets for these tokens will see a decrease in value and the block reward's value will go down, creating a spiral where hashpower leaves a chain because miners find better profit elsewhere. We are not economists and recognize there is a great deal of complexity that could be explored here, but we'll assume throughout this section that the rate of tokens minted is something that chains would like to keep below some threshold.  The general structure of the technique outlined below should be useful even with a more complex optimization criterion for the minting rate.
 
 \subsection{Getting the Best Deal}
-The key idea behind our technique is that the hashpower of mercenary miners is effectively purchased by the protocol increasing its minting rate.  Mercenaries see more profit when difficulty is low on a chain and move their hashpower to this chain for the tradeoff of tokens of this chain being mined at a higher rate than before.  Another way to put this is that the expected profit rate calculation miners use to decide which chain to mine on is proportional to the minting rate of the chain.  Our technique is based on the following observation: mercenary miners in our model are incentivized to mine on the less powerful competing chain when its expected rate of profit is higher, however this chain could potentially push its expected rate of profit lower while maintaining incentive for the mercenaries to stay on its chain.  A chain using this technique would set its profit rate as low as possible, $\epsilon$ above the profit rate of the competing chain. 
+The key idea behind our technique, illustrated in Figure 8, is that the hashpower of mercenary miners is effectively purchased by the protocol increasing its minting rate.  Mercenaries see more profit when difficulty is low on a chain and move their hashpower to this chain for the tradeoff of tokens of this chain being mined at a higher rate than before.  Another way to put this is that the expected profit rate is proportional to the minting rate of the chain.  Our technique is based on the following observation: mercenary miners in our model are incentivized to mine on a chain when its expected rate of profit is higher. However this chain could potentially push its expected rate of profit lower while maintaining incentive for the mercenaries to stay on its chain simply by being a better option then the other chain.  A chain using this technique would set its profit rate as low as possible, $\varepsilon$ above the profit rate of the competing chain. 
+
+\begin{figure}
+\begin{tikzpicture}[scale=1]
+\draw[-][very thick] (0,0) -- (0,5);
+\draw[-] [thick] (-0.1, 1) -- (0.1,1);
+\node[right] at (-1.25, 1) {$\frac{f_2}{\alpha + \beta_2}$ };
+\draw[-] [thick] (-0.1, 2.5) -- (0.1,2.5);
+\node[right] at (-1.25, 2.5) { $\frac{f_1}{\alpha + \beta_1}$};
+\draw[-] [thick] (-0.1, 4) -- (0.1,4);
+\node[right] at (-1.25, 4) {$\frac{f_2}{\beta_2} $ };
+\draw[-] [thick] (-0.1, 4.5) -- (0.1,4.5);
+\node[right] at (-1.25, 4.5) { $ \frac{f_1}{\beta_1}$ };
+\node[below] at (0,-0.1) {a.};
+\node at (0.5, 2.5)  (a1)  {1};
+\draw[->][thick] (0.4, 2.5)  -- (0.1, 2.5);
+\node at (0.5, 4)  (a1)  {2};
+\draw[->][thick] (0.4, 4)  -- (0.1, 4);
+\draw (0, 4) circle [radius=0.2];
+
+\draw[-][very thick] (2.5,0) -- (2.5,5);
+\draw[-] [thick] (2.4, 1) -- (2.6,1);
+\draw[-] [thick] (2.2, 2.5) -- (2.8,2.5);
+\draw[-] [dotted] [thick]  (2.9, 2.7) -- (2.2,2.7);
+\node[left] at (2.2, 2.6) (e1) {$\varepsilon$};
+\draw[-] [thick] (2.4, 4) -- (2.6,4);
+\draw[-] [thick] (2.4, 4.5) -- (2.6,4.5);
+\node[below] at (2.5,-0.1) {b.};
+\node at (3, 2.5)  (a1)  {1};
+\draw[->][thick] (2.9, 2.5)  -- (2.6, 2.5);
+\draw[->][thick] (2.9, 2.7)  -- (2.6, 2.7);
+\node at (3, 2.7)  (a1)  {2};
+\draw (2.5, 2.7) circle [radius=0.2];
+
+
+\end{tikzpicture}
+\caption{In many cases if chain 2 has a higher rate of profit than chain 1 (step a) then it can still maintain control of the mercenary miners while offering a smaller rate of profit and therefore a smaller minting rate }
+\end{figure}
+
 
 To achieve this expected profit, and therefore minting, rate reduction a protocol has two options: raise the difficulty or reduce the token reward per block.  Raising the difficulty causes external effects that would likely harm the system's function, i.e. transaction throughput would be variably adjusted and hence unreliable.  Perhaps this is acceptable for a chain launching an attack against a stronger competitor as its primary purpose.  The alternate of modifying the coinbase token reward dynamically does not suffer from throughput reductions however, and it achieves the same purpose.  Note that to actually build a protocol that sets the profit rate this way, it is essential to measure the profit rate of the competing chain: $\frac{f_1}{d_1}$.  There is already a great way to get a value for $d_1$: the attacking protocol could maintain the competitor chain and measure directly from solutions to block puzzles.  Part of $f_1$ could be measured directly as well by looking at the coinbase transaction and fees of each block.  However the protocol itself would need to access an oracle for the values of the exchange rates of the two tokens.
 
