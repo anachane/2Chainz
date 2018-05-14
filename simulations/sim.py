@@ -18,11 +18,12 @@ hPerSecond = 1000000000
 #     3. Blocks mined during the period
 #     4. Time it took for the chain to complete this period
 class Period:
-    def __init__(self, hashRate, diff, time, blocks):
+    def __init__(self, hashRate, diff, time, blocks, totalTime=0):
         self.hashRate = hashRate
         self.diff = diff
         self.timeSinceAdj = time
         self.blocks = blocks
+        self.totalTime = totalTime
         return
 
     def toList(self):
@@ -35,12 +36,13 @@ class Period:
 #     2. The periods in the chain's history
 #     3. A function to draw the next time it takes to mine a difficulty epoch
 class Chain:
-    def __init__(self, alpha, beta, targetTime, blockNum, hashRate, tokenValue):
+    def __init__(self, alpha, beta, targetTime, blockNum, hashRate, tokenValue, isBCH):
         # system parameters
         self.alpha = alpha
         self.beta = beta
         self.blockNum = blockNum
         self.tokenValue = tokenValue
+        self.isBCH = isBCH
 
         # current state of chain
         self.timeSinceAdj = 0.0
@@ -48,6 +50,7 @@ class Chain:
         self.lastPuzzleTime = 0.0
         self.blocks = 0
         self.hashRate = hashRate
+        self.initHashRate = hashRate
         self.targetTime = targetTime
         self.diff = targetTime * hPerSecond * (1 / max_ratio) * hashRate # init assuming steady state
 
@@ -68,9 +71,13 @@ class Chain:
         return
 
     # Update the current difficulty of the chain
-    def updateDifficulty(self):
+    def getInitialDiff(self):
+        return self.targetTime * hPerSecond * (1 / max_ratio) * self.initHashRate
+
+    # Update the current difficulty of the chain
+    def updateDifficultyBTC(self):
         self.diffPeriods += 1
-        newDiff = (self.diff * self.targetTime * self.blockNum) / self.timeSinceAdj
+        newDiff = (self.diff * self.targetTime ) / self.timeSinceAdj
         if newDiff > self.diff * 4.0:
             self.diff = self.diff * 4.0
         elif newDiff < self.diff / 4.0:
@@ -78,6 +85,47 @@ class Chain:
         else:
             self.diff = newDiff
         return
+
+    def updateDifficultyBCH(self):
+        self.diffPeriods += 1
+        if len(self.periods) >= 146:
+            b_last = self.periods[-2].diff
+            b_first = self.periods[-145].diff
+            ts = self.periods[-2].totalTime - self.periods[-145].totalTime
+        elif len(self.periods) >= 2:
+            num_blocks = len(self.periods)
+            b_last = self.periods[-2].diff
+            b_first = self.getInitialDiff()
+            ts = self.periods[-2].totalTime + self.targetTime*(144-num_blocks)
+        else:
+            b_last = self.getInitialDiff()
+            b_first = self.getInitialDiff()
+            ts = self.targetTime*144
+
+        ts = int(ts)
+        ts = min(ts, 288*self.targetTime)
+        ts = max(72*self.targetTime, ts)
+        chainwork = 0
+        for i in range(1, 145):
+            if i <= len(self.periods):
+                blockproof = 2**256/((2**224/self.periods[-i].diff) + 1)
+            else:
+                blockproof = 2**256/((2**224/self.getInitialDiff()) + 1)
+            chainwork += blockproof
+
+        w = chainwork
+        pw = w * self.targetTime / ts
+
+        if pw == 0:
+            self.diff = 1
+        else:
+            self.diff = max(1, 2**224*pw/(2**256 - pw))
+
+    def updateDifficulty(self):
+        if self.isBCH:
+            self.updateDifficultyBCH()
+        else:
+            self.updateDifficultyBTC()
 
     # Update the state of the chain to account for a new allocation of hash
     # power
@@ -140,6 +188,7 @@ class Simulation:
     def runGreedy(self):
         alphaMap = {}
         for alpha in [0.01, 0.05, 0.1]:
+            print 'new alpha: ' + str(alpha)
             beta1Map = {}
             alphaMap[alpha] = beta1Map
             beta1 = self.stepSize
@@ -155,7 +204,7 @@ class Simulation:
                     results = []
                     f1 = f2 / priceFrac
                     for i in range(self.runsPerStep):
-                        ch1, ch2 = self.runOne(beta1, beta2, alpha, f1, f2, gDecision)
+                        ch1, ch2 = self.runOne(beta1, beta2, alpha, f1, f2, gDecision, True, False)
                         results.append([ch1.toList(), ch2.toList()])
                     priceMap[priceFrac] = results
                 beta1 = beta1 + self.stepSize
@@ -166,11 +215,14 @@ class Simulation:
     # adjustment periods, returning the two Chains and associated data for
     # processing.  It is parameterized by a decision function and can
     # therefore be used to simulate different switching-miner strategies
-    def runOne(self, beta1, beta2, alpha, f1, f2, decisionFun):
+    def runOne(self, beta1, beta2, alpha, f1, f2, decisionFun, ch1IsBch, ch2IsBch):
         # We constrain the problem a bit to simplify things:
         #  alpha always starts out on chain 1
-        chain1 = Chain(alpha, beta1, 600, 2016, beta1 + alpha, f1)
-        chain2 = Chain(alpha, beta2, 600, 2016, beta2, f2)
+        targetTime = 600
+        ch1BlockNum = 1 if ch1IsBch else 2016
+        ch2BlockNum = 1 if ch2IsBch else 2016
+        chain1 = Chain(alpha, beta1, targetTime, ch1BlockNum, beta1 + alpha, f1, ch1IsBch)
+        chain2 = Chain(alpha, beta2, targetTime, ch2BlockNum, beta2, f2, ch2IsBch)
         # Each loop run adds a period to each chain
         # Difficulty adjustments and periods are not 1-1 so i is not updated
         #  in every loop
@@ -272,7 +324,7 @@ def saveResults(resultMap):
                     outputWriter.writerow(output)
 
 def main():
-    sim = Simulation(100)
+    sim = Simulation(2)
     resultMap = sim.runGreedy()
     saveResults(resultMap)
 
