@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 
 class Analysis:
     # take in the map, reduce function names, the stepsize between data and dataMap
-    def __init__(self, stepSize, data, titleStr):
+    def __init__(self, stepSize, data, pathStr, titleStr):
        self.stepSize = stepSize
        self.resultMap = data
        self.titleStr = titleStr
+       self.pathStr = pathStr
 
     # Output functions save and visualize data from a simulation run
     # plotResults plots the simulation measurements in a matplotlib graph.
@@ -20,25 +21,33 @@ class Analysis:
             ncols = int((1-alpha)/self.stepSize) - 1
             nrows = int(1.0/self.stepSize)
             vals = np.zeros((nrows,ncols))
+            x = np.zeros((nrows,ncols))
+            y = np.zeros((nrows,ncols))
             betaMap = self.resultMap[alpha]
             for ib,beta1 in enumerate(sorted(betaMap)):
                 if ib > ncols -1:
-                    print("ib: " + str(ib) + "beta1: " + str(beta1))
+                    print("ib: " + str(ib) + "Beta1: " + str(beta1))
                     continue
                 priceMap = betaMap[beta1]
                 for ip,priceFrac in enumerate(sorted(priceMap)):
                     if ip > nrows -1:
-                        print("ip: " + str(ip) + "priceFrac: " + str(priceFrac))
+                        print("ip: " + str(ip) + "Reward Ratio: " + str(priceFrac))
                         continue
+                    y[ip][ib] = sorted(priceMap)[ip]
+                    x[ip][ib] = sorted(betaMap)[ib]
                     val = priceMap[priceFrac]
                     vals[ip][ib] = val
             fig, axis = plt.subplots()
-            axis.set_xlabel("Beta1")
-            axis.set_ylabel("f2/f1")
-            axis.set_title(self.titleStr + "-alpha=" + str(alpha))
-            heatmap = axis.pcolor(vals)
+            axis.set_xlabel(r'$\beta_1$')
+            axis.xaxis.label.set_size(20)
+            axis.set_xlim([0,x[0][-1]])
+            axis.set_ylim([0,y[-1][0]])
+            axis.set_ylabel("Reward 2 / Reward 1")
+            axis.yaxis.label.set_size(14)
+            axis.set_title(self.titleStr + r" $\alpha=" + str(alpha)+"$", fontsize=20)
+            heatmap = axis.pcolormesh(x, y, vals)
             plt.colorbar(heatmap)
-            plt.savefig(self.titleStr +"-alpha="+str(alpha)+".png", dpi=100)
+            plt.savefig(self.pathStr + "-alpha="+str(alpha)+".png", dpi=100)
             plt.show()
             
 # loadResults loads a csv file to a python results dictionary
@@ -217,6 +226,27 @@ def timePerBlockCh1Map(ch1, ch2):
             alreadyMined = 0    
     return fT / totalBlocks
 
+def timePerBlockCh2Map(ch1, ch2):
+    fT = finishTimeMap(ch1, ch2)
+    totalBlocks = 0
+    alreadyMined = 0
+    for period in ch2.periods:
+        totalBlocks += int(period.blocks) - alreadyMined
+        alreadyMined = int(period.blocks)
+        if alreadyMined == 2016:
+            alreadyMined = 0    
+    return fT / totalBlocks
+
+
+def timeWithMercHPCh2Map(ch1, ch2):
+    fT = finishTimeMap(ch1, ch2)
+    totalHPTime = 0
+    for period in ch2.periods:
+        if float(period.hashRate) > ch2.beta + 0.001:
+            totalHPTime += float(period.timeSinceAdj)
+    return totalHPTime / fT
+
+
 def totalBlocks(ch1, ch2):
     blocks1 = 0
     for period in ch1.periods:
@@ -348,7 +378,8 @@ def sampleNumReduce(results):
 
             
 if __name__ == "__main__":
-   data = loadResults("results/big-run-2", countProfitMap, meanReduce)
-   analysis = Analysis(0.01, data, "normalized-profit")
+   data = loadResults("results/big-run-1", timeWithMercHPCh2Map, meanReduce)
+   title = "Mean Ratio Mercenary Time on Chain 2"
+   path = "gen-resources/mercenary-time-frac-ch2"
+   analysis = Analysis(0.01, data, path, title)
    analysis.plotResults()
-
